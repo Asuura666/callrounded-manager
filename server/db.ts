@@ -1,6 +1,21 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  agents,
+  InsertAgent,
+  calls,
+  InsertCall,
+  phoneNumbers,
+  InsertPhoneNumber,
+  knowledgeBases,
+  InsertKnowledgeBase,
+  knowledgeBaseSources,
+  InsertKnowledgeBaseSource,
+  events,
+  InsertEvent,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +104,165 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Agents
+ */
+export async function getAgentsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(agents).where(eq(agents.userId, userId));
+}
+
+export async function getAgentById(agentId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(agents).where(eq(agents.id, agentId)).limit(1);
+  return result[0];
+}
+
+export async function upsertAgent(agent: InsertAgent) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(agents).values(agent).onDuplicateKeyUpdate({
+    set: {
+      name: agent.name,
+      status: agent.status,
+      description: agent.description,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Appels
+ */
+export async function getCallsByUserId(userId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(calls).where(eq(calls.userId, userId)).limit(limit).offset(offset);
+}
+
+export async function getCallById(callId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(calls).where(eq(calls.id, callId)).limit(1);
+  return result[0];
+}
+
+export async function upsertCall(call: InsertCall) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(calls).values(call).onDuplicateKeyUpdate({
+    set: {
+      status: call.status,
+      transcription: call.transcription,
+      recordingUrl: call.recordingUrl,
+      duration: call.duration,
+      endedAt: call.endedAt,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Numéros de téléphone
+ */
+export async function getPhoneNumbersByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(phoneNumbers).where(eq(phoneNumbers.userId, userId));
+}
+
+export async function upsertPhoneNumber(phoneNumber: InsertPhoneNumber) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(phoneNumbers).values(phoneNumber).onDuplicateKeyUpdate({
+    set: {
+      status: phoneNumber.status,
+      agentId: phoneNumber.agentId,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Bases de connaissances
+ */
+export async function getKnowledgeBasesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(knowledgeBases).where(eq(knowledgeBases.userId, userId));
+}
+
+export async function getKnowledgeBaseById(kbId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(knowledgeBases).where(eq(knowledgeBases.id, kbId)).limit(1);
+  return result[0];
+}
+
+export async function upsertKnowledgeBase(kb: InsertKnowledgeBase) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(knowledgeBases).values(kb).onDuplicateKeyUpdate({
+    set: {
+      name: kb.name,
+      description: kb.description,
+      sourceCount: kb.sourceCount,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Sources de bases de connaissances
+ */
+export async function getSourcesByKnowledgeBaseId(kbId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(knowledgeBaseSources).where(eq(knowledgeBaseSources.knowledgeBaseId, kbId));
+}
+
+export async function upsertKnowledgeBaseSource(source: InsertKnowledgeBaseSource) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(knowledgeBaseSources).values(source).onDuplicateKeyUpdate({
+    set: {
+      status: source.status,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function deleteKnowledgeBaseSource(sourceId: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(knowledgeBaseSources).where(eq(knowledgeBaseSources.id, sourceId));
+}
+
+/**
+ * Événements
+ */
+export async function createEvent(event: InsertEvent) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(events).values(event);
+}
+
+export async function getUnnotifiedEvents(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(events)
+    .where(and(eq(events.userId, userId), eq(events.isNotified, 0)));
+}
+
+export async function markEventAsNotified(eventId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(events)
+    .set({ isNotified: 1 })
+    .where(eq(events.id, eventId));
+}
