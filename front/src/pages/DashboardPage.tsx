@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Bot, PhoneCall, TrendingUp, Clock } from "lucide-react";
+import { PhoneCall, PhoneOff, CalendarCheck, Clock } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { formatDateParis } from "@/lib/dates";
 
 interface DashboardStats {
   total_agents: number;
@@ -24,6 +26,15 @@ interface Call {
   started_at: string | null;
 }
 
+const statusLabel: Record<string, string> = {
+  completed: "Répondu",
+  active: "En cours",
+  missed: "Manqué",
+  failed: "Échoué",
+  ongoing: "En cours",
+  unknown: "Inconnu",
+};
+
 const statusColors: Record<string, string> = {
   completed: "bg-success/20 text-success",
   active: "bg-success/20 text-success",
@@ -33,7 +44,15 @@ const statusColors: Record<string, string> = {
   unknown: "bg-zinc-500/20 text-zinc-400",
 };
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  if (m === 0) return `${s}s`;
+  return `${m}min ${s}s`;
+}
+
 export function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [calls, setCalls] = useState<Call[]>([]);
 
@@ -43,25 +62,56 @@ export function DashboardPage() {
   }, []);
 
   const statCards = [
-    { label: "Agents actifs", value: stats ? `${stats.active_agents}/${stats.total_agents}` : "\u2014", icon: Bot },
-    { label: "Appels aujourd'hui", value: stats?.total_calls_today ?? "\u2014", icon: PhoneCall },
-    { label: "Taux de r\u00e9ponse", value: stats ? `${stats.response_rate}%` : "\u2014", icon: TrendingUp },
-    { label: "Dur\u00e9e moyenne", value: stats ? `${stats.avg_duration}s` : "\u2014", icon: Clock },
+    {
+      label: "Appels répondus aujourd'hui",
+      value: stats?.completed_calls ?? "—",
+      icon: PhoneCall,
+      color: "text-success",
+    },
+    {
+      label: "Rendez-vous pris",
+      value: "—",
+      icon: CalendarCheck,
+      color: "text-accent",
+      subtitle: "Bientôt disponible",
+    },
+    {
+      label: "Appels manqués",
+      value: stats?.missed_calls ?? "—",
+      icon: PhoneOff,
+      color: "text-error",
+    },
+    {
+      label: "Durée moyenne",
+      value: stats ? formatDuration(stats.avg_duration) : "—",
+      icon: Clock,
+      color: "text-text-secondary",
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Dashboard</h2>
+      <div>
+        <h2 className="text-2xl font-bold">
+          Bonjour, {user?.tenant_name || "votre salon"} 👋
+        </h2>
+        <p className="text-text-secondary mt-1">
+          Voici l'activité de votre réceptionniste
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s) => (
           <Card key={s.label} className="bg-surface border-border">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-text-secondary">{s.label}</CardTitle>
-              <s.icon className="w-4 h-4 text-text-muted" />
+              <s.icon className={`w-5 h-5 ${s.color}`} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.value}</div>
+              {s.subtitle && (
+                <p className="text-xs text-text-muted mt-1">{s.subtitle}</p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -73,34 +123,38 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent>
           {calls.length === 0 ? (
-            <p className="text-text-muted text-center py-8">Aucun appel r&eacute;cent</p>
+            <p className="text-text-muted text-center py-8">
+              Aucun appel pour le moment. Les appels apparaîtront ici dès que votre réceptionniste sera actif.
+            </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Appelant</TableHead>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Dur&eacute;e</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calls.map((c) => (
-                  <TableRow key={c.id} className="border-border">
-                    <TableCell className="font-mono text-sm">{c.caller_number || "\u2014"}</TableCell>
-                    <TableCell className="text-text-secondary">{c.agent_external_id || "\u2014"}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[c.status] || statusColors.unknown}>{c.status}</Badge>
-                    </TableCell>
-                    <TableCell>{c.duration ? `${Math.round(c.duration)}s` : "\u2014"}</TableCell>
-                    <TableCell className="text-text-muted text-sm">
-                      {c.started_at ? new Date(c.started_at).toLocaleString("fr-FR") : "\u2014"}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead>Appelant</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Durée</TableHead>
+                    <TableHead>Date</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {calls.map((c) => (
+                    <TableRow key={c.id} className="border-border">
+                      <TableCell className="font-mono text-sm">{c.caller_number || "Numéro masqué"}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[c.status] || statusColors.unknown}>
+                          {statusLabel[c.status] || c.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{c.duration ? formatDuration(c.duration) : "—"}</TableCell>
+                      <TableCell className="text-text-muted text-sm">
+                        {c.started_at ? formatDateParis(c.started_at) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

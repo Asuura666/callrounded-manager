@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, PhoneCall } from "lucide-react";
 import { api } from "@/lib/api";
+import { formatDateParis, formatDuration } from "@/lib/dates";
 
 interface Call {
   id: string;
@@ -16,6 +16,15 @@ interface Call {
   status: string;
   started_at: string | null;
 }
+
+const statusLabel: Record<string, string> = {
+  completed: "Répondu",
+  active: "En cours",
+  missed: "Manqué",
+  failed: "Échoué",
+  ongoing: "En cours",
+  unknown: "Inconnu",
+};
 
 const statusColors: Record<string, string> = {
   completed: "bg-success/20 text-success",
@@ -31,41 +40,37 @@ export function CallsPage() {
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterAgent, setFilterAgent] = useState("");
   const limit = 20;
 
   const fetchCalls = () => {
     setLoading(true);
     const params: Record<string, string> = { limit: String(limit), offset: String(offset) };
     if (filterStatus) params.status = filterStatus;
-    if (filterAgent) params.agent_id = filterAgent;
     api.get<Call[]>("/calls", params).then(setCalls).catch(() => {}).finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchCalls(); }, [offset, filterStatus, filterAgent]);
+  useEffect(() => { fetchCalls(); }, [offset, filterStatus]);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Appels</h2>
+      <div>
+        <h2 className="text-2xl font-bold">Historique des appels</h2>
+        <p className="text-text-secondary mt-1">
+          Tous les appels gérés par votre réceptionniste
+        </p>
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setOffset(0); }}
-          className="bg-surface border border-border rounded-md px-3 py-2 text-sm text-text-primary"
+          className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
         >
-          <option value="">Tous les statuts</option>
-          <option value="completed">Termin&eacute;</option>
-          <option value="missed">Manqu&eacute;</option>
+          <option value="">Tous les appels</option>
+          <option value="completed">Répondus</option>
+          <option value="missed">Manqués</option>
           <option value="ongoing">En cours</option>
-          <option value="failed">&Eacute;chou&eacute;</option>
         </select>
-        <Input
-          placeholder="Filtrer par agent ID"
-          value={filterAgent}
-          onChange={(e) => { setFilterAgent(e.target.value); setOffset(0); }}
-          className="bg-surface border-border w-48"
-        />
       </div>
 
       <Card className="bg-surface border-border">
@@ -75,52 +80,61 @@ export function CallsPage() {
           ) : calls.length === 0 ? (
             <div className="text-center py-12 text-text-muted">
               <PhoneCall className="w-12 h-12 mx-auto mb-4 opacity-40" />
-              <p>Aucun appel</p>
+              <p>Aucun appel dans l'historique</p>
+              <p className="text-sm mt-1">Les appels de vos clients apparaîtront ici</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Appelant</TableHead>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Dur&eacute;e</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calls.map((c) => (
-                  <TableRow key={c.id} className="border-border cursor-pointer hover:bg-surface-hover">
-                    <TableCell>
-                      <Link href={`/calls/${c.id}`}>
-                        <span className="font-mono text-sm text-accent hover:underline">{c.caller_number || c.id.slice(0, 8)}</span>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-text-secondary">{c.agent_external_id || "\u2014"}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[c.status] || statusColors.unknown}>{c.status}</Badge>
-                    </TableCell>
-                    <TableCell>{c.duration ? `${Math.round(c.duration)}s` : "\u2014"}</TableCell>
-                    <TableCell className="text-text-muted text-sm">
-                      {c.started_at ? new Date(c.started_at).toLocaleString("fr-FR") : "\u2014"}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead>Appelant</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Durée</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {calls.map((c) => (
+                    <TableRow key={c.id} className="border-border">
+                      <TableCell className="font-mono text-sm">{c.caller_number || "Numéro masqué"}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[c.status] || statusColors.unknown}>
+                          {statusLabel[c.status] || c.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{c.duration ? formatDuration(c.duration) : "—"}</TableCell>
+                      <TableCell className="text-text-muted text-sm">
+                        {c.started_at ? formatDateParis(c.started_at) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/calls/${c.id}`}>
+                          <Button variant="ghost" size="sm" className="text-accent">
+                            Voir détail
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-          <ChevronLeft className="w-4 h-4 mr-1" /> Pr&eacute;c&eacute;dent
-        </Button>
-        <span className="text-sm text-text-muted">Page {Math.floor(offset / limit) + 1}</span>
-        <Button variant="outline" size="sm" disabled={calls.length < limit} onClick={() => setOffset(offset + limit)}>
-          Suivant <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
-      </div>
+      {calls.length > 0 && (
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
+            <ChevronLeft className="w-4 h-4 mr-1" /> Précédent
+          </Button>
+          <span className="text-sm text-text-muted">Page {Math.floor(offset / limit) + 1}</span>
+          <Button variant="outline" size="sm" disabled={calls.length < limit} onClick={() => setOffset(offset + limit)}>
+            Suivant <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

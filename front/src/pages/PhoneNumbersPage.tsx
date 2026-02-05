@@ -38,42 +38,52 @@ export function PhoneNumbersPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Num&eacute;ros de t&eacute;l&eacute;phone</h2>
+      <div>
+        <h2 className="text-2xl font-bold">Numéros de téléphone</h2>
+        <p className="text-text-secondary mt-1">
+          Les numéros sur lesquels votre réceptionniste répond
+        </p>
+      </div>
 
       {numbers.length === 0 ? (
         <Card className="bg-surface border-border">
-          <CardContent className="py-12 text-center text-text-muted">
-            <Phone className="w-12 h-12 mx-auto mb-4 opacity-40" />
-            <p>Aucun num&eacute;ro configur&eacute;</p>
+          <CardContent className="py-12 text-center">
+            <Phone className="w-12 h-12 mx-auto mb-4 text-text-muted opacity-40" />
+            <h3 className="text-lg font-medium mb-2">Aucun numéro configuré</h3>
+            <p className="text-text-muted max-w-md mx-auto">
+              Vos numéros de téléphone apparaîtront ici une fois votre réceptionniste configuré.
+            </p>
           </CardContent>
         </Card>
       ) : (
         <Card className="bg-surface border-border">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Num&eacute;ro</TableHead>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actif</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {numbers.map((pn) => (
-                  <TableRow key={pn.id} className="border-border">
-                    <TableCell className="font-mono">{pn.number}</TableCell>
-                    <TableCell className="text-text-secondary">{pn.agent_external_id || "\u2014"}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[pn.status] || statusColors.inactive}>{pn.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Switch checked={pn.status === "active"} onCheckedChange={() => toggleStatus(pn)} />
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead>Numéro</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actif</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {numbers.map((pn) => (
+                    <TableRow key={pn.id} className="border-border">
+                      <TableCell className="font-mono text-base">{pn.number}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[pn.status] || statusColors.inactive}>
+                          {pn.status === "active" ? "Actif" : "Inactif"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Switch checked={pn.status === "active"} onCheckedChange={() => toggleStatus(pn)} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}

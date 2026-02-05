@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Database } from "lucide-react";
+import { BookOpen, Scissors, Clock3, Euro } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface KnowledgeBase {
@@ -24,13 +24,32 @@ export function KnowledgeBasesPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Bases de connaissances</h2>
+      <div>
+        <h2 className="text-2xl font-bold">Base de connaissances</h2>
+        <p className="text-text-secondary mt-1">
+          Ce que votre réceptionniste sait sur votre salon
+        </p>
+      </div>
 
       {kbs.length === 0 ? (
         <Card className="bg-surface border-border">
-          <CardContent className="py-12 text-center text-text-muted">
-            <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-40" />
-            <p>Aucune base de connaissances</p>
+          <CardContent className="py-12 text-center">
+            <BookOpen className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-40" />
+            <h3 className="text-lg font-medium mb-2">Aucune base de connaissances</h3>
+            <p className="text-text-muted max-w-lg mx-auto">
+              La base de connaissances contient les informations que votre réceptionniste utilise pour répondre à vos clients : vos services, tarifs, horaires d'ouverture, etc.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
+              <Badge variant="outline" className="text-text-muted border-border py-1.5 px-3">
+                <Scissors className="w-3.5 h-3.5 mr-1.5" /> Services & prestations
+              </Badge>
+              <Badge variant="outline" className="text-text-muted border-border py-1.5 px-3">
+                <Euro className="w-3.5 h-3.5 mr-1.5" /> Tarifs
+              </Badge>
+              <Badge variant="outline" className="text-text-muted border-border py-1.5 px-3">
+                <Clock3 className="w-3.5 h-3.5 mr-1.5" /> Horaires d'ouverture
+              </Badge>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -39,22 +58,17 @@ export function KnowledgeBasesPage() {
             <Card key={kb.id} className="bg-surface border-border">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Database className="w-4 h-4 text-accent" />
-                  {kb.name || kb.id}
+                  <BookOpen className="w-4 h-4 text-accent" />
+                  {kb.name || "Base de connaissances"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-text-secondary line-clamp-2">
-                  {kb.description || "Pas de description"}
+                <p className="text-sm text-text-secondary line-clamp-3">
+                  {kb.description || "Informations sur votre salon utilisées par le réceptionniste pour répondre aux questions de vos clients."}
                 </p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-text-muted border-border">
-                    {kb.source_count} source{kb.source_count !== 1 ? "s" : ""}
-                  </Badge>
-                  {kb.agent_external_id && (
-                    <span className="text-xs text-text-muted">Agent: {kb.agent_external_id}</span>
-                  )}
-                </div>
+                <Badge variant="outline" className="text-text-muted border-border">
+                  {kb.source_count} source{kb.source_count !== 1 ? "s" : ""} d'information
+                </Badge>
               </CardContent>
             </Card>
           ))}

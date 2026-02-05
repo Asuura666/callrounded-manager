@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
-  Bot,
+  Headset,
   Phone,
   PhoneCall,
   BookOpen,
@@ -14,11 +14,11 @@ import type { User } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/calls", label: "Appels", icon: PhoneCall },
+  { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/agents", label: "Mon réceptionniste", icon: Headset },
+  { href: "/calls", label: "Historique appels", icon: PhoneCall },
   { href: "/phone-numbers", label: "Numéros", icon: Phone },
-  { href: "/knowledge-bases", label: "Bases", icon: BookOpen },
+  { href: "/knowledge-bases", label: "Base de connaissances", icon: BookOpen },
 ];
 
 interface Props {
@@ -37,7 +37,7 @@ export function AppLayout({ user, onLogout, children }: Props) {
       <aside className="hidden md:flex md:w-64 flex-col bg-surface border-r border-border">
         <div className="p-6">
           <h1 className="text-xl font-bold text-accent">CallRounded</h1>
-          <p className="text-sm text-text-secondary mt-1">{user.tenant_name || "Portail"}</p>
+          <p className="text-sm text-text-secondary mt-1 truncate">{user.tenant_name || "Mon salon"}</p>
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {navItems.map((item) => {
@@ -62,7 +62,7 @@ export function AppLayout({ user, onLogout, children }: Props) {
           <div className="flex items-center justify-between">
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{user.email}</p>
-              <p className="text-xs text-text-muted">{user.role}</p>
+              <p className="text-xs text-text-muted">Administrateur</p>
             </div>
             <Button variant="ghost" size="icon" onClick={onLogout} title="Déconnexion">
               <LogOut className="w-4 h-4" />
@@ -127,7 +127,7 @@ export function AppLayout({ user, onLogout, children }: Props) {
               <Link key={item.href} href={item.href}>
                 <div className={`flex flex-col items-center gap-0.5 text-xs cursor-pointer ${active ? "text-accent" : "text-text-muted"}`}>
                   <item.icon className="w-5 h-5" />
-                  {item.label}
+                  <span className="truncate max-w-[4.5rem]">{item.label}</span>
                 </div>
               </Link>
             );
