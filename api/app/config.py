@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # CallRounded API
     CALLROUNDED_API_URL: str = "https://api.callrounded.com/v1"
     CALLROUNDED_API_KEY: str = "demo"
+    CALLROUNDED_AGENT_ID: str = ""
 
     # CORS
     FRONTEND_URL: str = "http://localhost:3100"

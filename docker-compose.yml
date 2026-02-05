@@ -31,6 +31,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-please}
       CALLROUNDED_API_URL: ${CALLROUNDED_API_URL:-https://api.callrounded.com/v1}
       CALLROUNDED_API_KEY: ${CALLROUNDED_API_KEY:-demo}
+      CALLROUNDED_AGENT_ID: ${CALLROUNDED_AGENT_ID:-}
       FRONTEND_URL: ${FRONTEND_URL:-https://callrounded.apps.ilanewep.cloud}
 
   front:

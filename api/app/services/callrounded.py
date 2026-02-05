@@ -1,4 +1,4 @@
-"""CallRounded API client — proxies all external calls through the backend."""
+"""CallRounded (Rounded) API client — proxies all external calls through the backend."""
 
 import logging
 from typing import Any
@@ -17,21 +17,23 @@ def _headers() -> dict[str, str]:
 
 
 def _client() -> httpx.AsyncClient:
-    return httpx.AsyncClient(base_url=settings.CALLROUNDED_API_URL, headers=_headers(), timeout=_TIMEOUT)
+    return httpx.AsyncClient(
+        base_url=settings.CALLROUNDED_API_URL,
+        headers=_headers(),
+        timeout=_TIMEOUT,
+    )
 
 
 # ── Agents ────────────────────────────────────────────────────────────
+# NOTE: Rounded API has NO list agents endpoint (GET /agents → 405)
+# We use the configured agent ID to fetch the single agent
 
 async def list_agents() -> list[dict[str, Any]]:
-    try:
-        async with _client() as client:
-            resp = await client.get("/agents")
-            resp.raise_for_status()
-            data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
-    except Exception as exc:
-        logger.warning("CallRounded list_agents failed: %s", exc)
+    """Return a list with the configured agent (Rounded has no list endpoint)."""
+    if not settings.CALLROUNDED_AGENT_ID:
         return []
+    agent = await get_agent(settings.CALLROUNDED_AGENT_ID)
+    return [agent] if agent else []
 
 
 async def get_agent(agent_id: str) -> dict[str, Any] | None:
@@ -40,36 +42,47 @@ async def get_agent(agent_id: str) -> dict[str, Any] | None:
             resp = await client.get(f"/agents/{agent_id}")
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", data)
     except Exception as exc:
         logger.warning("CallRounded get_agent(%s) failed: %s", agent_id, exc)
         return None
 
 
-async def patch_agent(agent_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+async def update_agent(agent_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
     try:
         async with _client() as client:
             resp = await client.patch(f"/agents/{agent_id}", json=payload)
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", data)
     except Exception as exc:
-        logger.warning("CallRounded patch_agent(%s) failed: %s", agent_id, exc)
+        logger.warning("CallRounded update_agent(%s) failed: %s", agent_id, exc)
+        return None
+
+
+async def deploy_agent(agent_id: str) -> dict[str, Any] | None:
+    try:
+        async with _client() as client:
+            resp = await client.post(f"/agents/{agent_id}/deploy")
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("data", data)
+    except Exception as exc:
+        logger.warning("CallRounded deploy_agent(%s) failed: %s", agent_id, exc)
         return None
 
 
 # ── Calls ─────────────────────────────────────────────────────────────
 
-async def list_calls(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+async def list_calls(limit: int = 50, page: int = 1) -> dict[str, Any]:
     try:
         async with _client() as client:
-            resp = await client.get("/calls", params={"limit": limit, "offset": offset})
+            resp = await client.get("/calls", params={"limit": limit, "page": page, "use_cursor": False})
             resp.raise_for_status()
-            data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return resp.json()
     except Exception as exc:
         logger.warning("CallRounded list_calls failed: %s", exc)
-        return []
+        return {"data": [], "total_items": 0}
 
 
 async def get_call(call_id: str) -> dict[str, Any] | None:
@@ -78,52 +91,50 @@ async def get_call(call_id: str) -> dict[str, Any] | None:
             resp = await client.get(f"/calls/{call_id}")
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", data)
     except Exception as exc:
         logger.warning("CallRounded get_call(%s) failed: %s", call_id, exc)
         return None
 
 
-# ── Phone Numbers ─────────────────────────────────────────────────────
-
-async def list_phone_numbers() -> list[dict[str, Any]]:
+async def terminate_call(call_id: str) -> bool:
     try:
         async with _client() as client:
-            resp = await client.get("/phone-numbers")
+            resp = await client.post(f"/calls/{call_id}/terminate")
+            resp.raise_for_status()
+            return True
+    except Exception as exc:
+        logger.warning("CallRounded terminate_call(%s) failed: %s", call_id, exc)
+        return False
+
+
+# ── Phone Numbers ─────────────────────────────────────────────────────
+
+async def list_phone_numbers(limit: int = 50) -> list[dict[str, Any]]:
+    try:
+        async with _client() as client:
+            resp = await client.get("/phone-numbers", params={"limit": limit})
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", [])
     except Exception as exc:
         logger.warning("CallRounded list_phone_numbers failed: %s", exc)
         return []
 
 
-async def patch_phone_number(pn_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+async def update_phone_number(phone_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
     try:
         async with _client() as client:
-            resp = await client.patch(f"/phone-numbers/{pn_id}", json=payload)
+            resp = await client.patch(f"/phone-numbers/{phone_id}", json=payload)
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", data)
     except Exception as exc:
-        logger.warning("CallRounded patch_phone_number(%s) failed: %s", pn_id, exc)
+        logger.warning("CallRounded update_phone_number(%s) failed: %s", phone_id, exc)
         return None
 
 
 # ── Knowledge Bases ───────────────────────────────────────────────────
-
-async def list_knowledge_bases() -> list[dict[str, Any]]:
-    try:
-        async with _client() as client:
-            # The API may not have a list endpoint; try common patterns
-            resp = await client.get("/knowledge-bases")
-            resp.raise_for_status()
-            data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
-    except Exception as exc:
-        logger.warning("CallRounded list_knowledge_bases failed: %s", exc)
-        return []
-
 
 async def get_knowledge_base(kb_id: str) -> dict[str, Any] | None:
     try:
@@ -131,7 +142,7 @@ async def get_knowledge_base(kb_id: str) -> dict[str, Any] | None:
             resp = await client.get(f"/knowledge-bases/{kb_id}")
             resp.raise_for_status()
             data = resp.json()
-            return data.get("data", data) if isinstance(data, dict) else data
+            return data.get("data", data)
     except Exception as exc:
         logger.warning("CallRounded get_knowledge_base(%s) failed: %s", kb_id, exc)
         return None
