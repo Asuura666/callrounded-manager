@@ -43,53 +43,60 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Custom theme colors */
-  --color-surface: #111113;
-  --color-surface-hover: #1a1a1d;
-  --color-border-hover: #3f3f46;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
+  /* W&I Theme Colors */
+  --color-navy: #0E2A47;
+  --color-navy-light: #133558;
+  --color-navy-dark: #091C32;
+  --color-gold: #C9A24D;
+  --color-gold-light: #D4B46A;
+  --color-gold-dark: #B08C3A;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F7F8FA;
+  --color-border-hover: #C9A24D;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #5A6678;
+  --color-text-muted: #8896A6;
   --color-success: #22c55e;
   --color-error: #ef4444;
   --color-warning: #eab308;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Montserrat", system-ui, -apple-system, sans-serif;
+  --font-heading: "Playfair Display", Georgia, serif;
 }
 
-/* Dark mode as default (no .dark class needed) */
+/* W&I Light Theme */
 :root {
   --radius: 0.625rem;
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #111113;
-  --card-foreground: #fafafa;
-  --popover: #111113;
-  --popover-foreground: #fafafa;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #1a1a1d;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
+  --background: #EFF1F5;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #C9A24D;
+  --primary-foreground: #0E2A47;
+  --secondary: #EFF1F5;
+  --secondary-foreground: #0E2A47;
+  --muted: #E4E7ED;
+  --muted-foreground: #5A6678;
+  --accent: #C9A24D;
+  --accent-foreground: #0E2A47;
   --destructive: #ef4444;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
+  --border: #D8DCE4;
+  --input: #D8DCE4;
+  --ring: #C9A24D;
+  --chart-1: #0E2A47;
   --chart-2: #22c55e;
-  --chart-3: #eab308;
+  --chart-3: #C9A24D;
   --chart-4: #a855f7;
   --chart-5: #ef4444;
-  --sidebar: #111113;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1a1a1d;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #27272a;
-  --sidebar-ring: #3b82f6;
+  --sidebar: #0E2A47;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #C9A24D;
+  --sidebar-primary-foreground: #0E2A47;
+  --sidebar-accent: #133558;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1A3A5C;
+  --sidebar-ring: #C9A24D;
 }
 
 @layer base {
@@ -98,6 +105,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-family: "Montserrat", system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Playfair Display", Georgia, serif;
   }
 }

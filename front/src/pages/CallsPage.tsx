@@ -33,12 +33,12 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusColor: Record<string, string> = {
-  completed: "bg-green-500/20 text-green-400",
-  active: "bg-blue-500/20 text-blue-400",
-  missed: "bg-yellow-500/20 text-yellow-400",
-  failed: "bg-red-500/20 text-red-400",
-  ongoing: "bg-blue-500/20 text-blue-400",
-  unknown: "bg-zinc-500/20 text-zinc-400",
+  completed: "bg-emerald-100 text-emerald-700",
+  active: "bg-sky-100 text-sky-700",
+  missed: "bg-amber-100 text-amber-700",
+  failed: "bg-red-100 text-red-600",
+  ongoing: "bg-sky-100 text-sky-700",
+  unknown: "bg-gray-100 text-gray-500",
 };
 
 function formatCost(cost: number | null): string {
@@ -83,11 +83,13 @@ export function CallsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Historique des appels</h2>
-        <p className="text-zinc-400 mt-1">
+        <h2 className="text-2xl font-bold text-navy" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          Historique des appels
+        </h2>
+        <p className="text-text-secondary mt-1">
           Tous les appels gérés par votre réceptionniste
           {totalItems > 0 && (
-            <span className="text-zinc-500"> · {totalItems} appels</span>
+            <span className="text-text-muted"> · {totalItems} appels</span>
           )}
         </p>
       </div>
@@ -99,7 +101,7 @@ export function CallsPage() {
             setFilterStatus(e.target.value);
             setPage(1);
           }}
-          className="bg-[#1a1a1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="bg-white border border-[#D8DCE4] rounded-lg px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold"
         >
           <option value="">Tous les appels</option>
           <option value="completed">Répondus</option>
@@ -108,14 +110,16 @@ export function CallsPage() {
         </select>
       </div>
 
-      <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl">
+      <div className="bg-white border border-[#E4E7ED] rounded-xl shadow-sm overflow-hidden">
         {loading ? (
-          <p className="text-zinc-500 text-center py-12">Chargement...</p>
+          <p className="text-text-muted text-center py-12">Chargement...</p>
         ) : calls.length === 0 ? (
           <div className="text-center py-12">
-            <PhoneCall className="w-12 h-12 mx-auto mb-4 text-zinc-600" />
-            <p className="text-zinc-500">Aucun appel dans l'historique</p>
-            <p className="text-sm text-zinc-600 mt-1">
+            <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <PhoneCall className="w-8 h-8 text-navy/40" />
+            </div>
+            <p className="text-text-secondary font-medium">Aucun appel dans l'historique</p>
+            <p className="text-sm text-text-muted mt-1">
               Les appels de vos clients apparaîtront ici
             </p>
           </div>
@@ -123,52 +127,52 @@ export function CallsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                <tr className="bg-navy">
+                  <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                     Date
                   </th>
-                  <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                     Appelant
                   </th>
-                  <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                     Durée
                   </th>
-                  <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                     Statut
                   </th>
-                  <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                     Coût
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {calls.map((c) => (
+                {calls.map((c, idx) => (
                   <tr
                     key={c.id}
-                    className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+                    className={`border-b border-[#E4E7ED] hover:bg-gold/5 cursor-pointer transition-colors ${idx % 2 === 1 ? "bg-[#F9FAFB]" : ""}`}
                     onClick={() => setLocation(`/calls/${c.id}`)}
                   >
-                    <td className="px-5 py-3 text-sm text-zinc-300">
+                    <td className="px-5 py-3 text-sm text-text-secondary">
                       {c.start_time
                         ? formatDateParis(c.start_time)
                         : "—"}
                     </td>
-                    <td className="px-5 py-3 text-sm font-mono">
+                    <td className="px-5 py-3 text-sm font-mono text-navy font-medium">
                       {c.from_number || "Masqué"}
                     </td>
-                    <td className="px-5 py-3 text-sm">
+                    <td className="px-5 py-3 text-sm text-text-secondary">
                       {c.duration_seconds
                         ? formatDuration(c.duration_seconds)
                         : "—"}
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[c.status] || statusColor.unknown}`}
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusColor[c.status] || statusColor.unknown}`}
                       >
                         {statusLabel[c.status] || c.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-zinc-400">
+                    <td className="px-5 py-3 text-sm text-text-secondary">
                       {formatCost(c.cost)}
                     </td>
                   </tr>
@@ -185,17 +189,17 @@ export function CallsPage() {
           <button
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
-            className="flex items-center gap-1 px-4 py-2 text-sm rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-4 py-2 text-sm rounded-lg border border-[#D8DCE4] text-navy hover:bg-gold/10 hover:border-gold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-4 h-4" /> Précédent
           </button>
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-text-muted">
             Page {page} / {totalPages}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
-            className="flex items-center gap-1 px-4 py-2 text-sm rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-4 py-2 text-sm rounded-lg border border-[#D8DCE4] text-navy hover:bg-gold/10 hover:border-gold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Suivant <ChevronRight className="w-4 h-4" />
           </button>

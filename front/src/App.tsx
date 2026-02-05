@@ -15,8 +15,14 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-text-muted">Chargement...</div>
+      <div className="min-h-screen flex items-center justify-center bg-navy">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gold mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            W&I
+          </h1>
+          <div className="w-12 h-0.5 bg-gold/40 rounded-full mx-auto mb-4" />
+          <p className="text-white/50 text-sm">Chargement...</p>
+        </div>
       </div>
     );
   }

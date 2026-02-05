@@ -45,11 +45,11 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusColor: Record<string, string> = {
-  completed: "bg-green-500/20 text-green-400",
-  missed: "bg-yellow-500/20 text-yellow-400",
-  failed: "bg-red-500/20 text-red-400",
-  ongoing: "bg-blue-500/20 text-blue-400",
-  unknown: "bg-zinc-500/20 text-zinc-400",
+  completed: "bg-emerald-100 text-emerald-700",
+  missed: "bg-amber-100 text-amber-700",
+  failed: "bg-red-100 text-red-600",
+  ongoing: "bg-sky-100 text-sky-700",
+  unknown: "bg-gray-100 text-gray-500",
 };
 
 function formatCost(cost: number | null): string {
@@ -93,35 +93,39 @@ export function DashboardPage() {
       label: "Appels total",
       value: stats?.total_calls ?? "—",
       icon: PhoneCall,
-      color: "text-blue-400",
+      iconBg: "bg-navy/10",
+      iconColor: "text-navy",
     },
     {
       label: "Appels aujourd'hui",
       value: stats?.total_calls_today ?? "—",
       icon: Phone,
-      color: "text-green-400",
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
     },
     {
       label: "Durée moyenne",
       value: stats ? formatDuration(stats.avg_duration) : "—",
       icon: Clock,
-      color: "text-purple-400",
+      iconBg: "bg-violet-50",
+      iconColor: "text-violet-600",
     },
     {
       label: "Coût total",
       value: stats ? formatCost(stats.total_cost) : "—",
       icon: Euro,
-      color: "text-yellow-400",
+      iconBg: "bg-gold/10",
+      iconColor: "text-gold-dark",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl font-bold text-navy" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
           Bonjour, {user?.tenant_name || "votre salon"} 👋
         </h2>
-        <p className="text-zinc-400 mt-1">
+        <p className="text-text-secondary mt-1" style={{ fontFamily: "'Montserrat', sans-serif" }}>
           Voici l'activité de votre réceptionniste
         </p>
       </div>
@@ -129,21 +133,21 @@ export function DashboardPage() {
       {/* Date filter */}
       <div className="flex flex-wrap gap-3 items-end">
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Du</label>
+          <label className="block text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Du</label>
           <input
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="bg-[#1a1a1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-white border border-[#D8DCE4] rounded-lg px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold"
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Au</label>
+          <label className="block text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Au</label>
           <input
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="bg-[#1a1a1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="bg-white border border-[#D8DCE4] rounded-lg px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold"
           />
         </div>
         {(fromDate || toDate) && (
@@ -152,7 +156,7 @@ export function DashboardPage() {
               setFromDate("");
               setToDate("");
             }}
-            className="text-sm text-blue-400 hover:text-blue-300 pb-2"
+            className="text-sm text-gold hover:text-gold-dark pb-2 font-medium"
           >
             Réinitialiser
           </button>
@@ -164,13 +168,15 @@ export function DashboardPage() {
         {statCards.map((s) => (
           <div
             key={s.label}
-            className="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-5"
+            className="bg-white border border-[#E4E7ED] rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-zinc-400">{s.label}</span>
-              <s.icon className={`w-5 h-5 ${s.color}`} />
+              <span className="text-sm text-text-secondary font-medium">{s.label}</span>
+              <div className={`w-9 h-9 ${s.iconBg} rounded-lg flex items-center justify-center`}>
+                <s.icon className={`w-5 h-5 ${s.iconColor}`} />
+              </div>
             </div>
-            <div className="text-2xl font-bold">{s.value}</div>
+            <div className="text-2xl font-bold text-navy">{s.value}</div>
           </div>
         ))}
       </div>
@@ -178,88 +184,96 @@ export function DashboardPage() {
       {/* Extra stats row */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-4 flex items-center gap-3">
-            <TrendingUp className="w-5 h-5 text-green-400" />
+          <div className="bg-white border border-[#E4E7ED] rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+            </div>
             <div>
-              <div className="text-sm text-zinc-400">Taux de réponse</div>
-              <div className="text-lg font-bold">{stats.response_rate}%</div>
+              <div className="text-sm text-text-secondary font-medium">Taux de réponse</div>
+              <div className="text-lg font-bold text-navy">{stats.response_rate}%</div>
             </div>
           </div>
-          <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-4 flex items-center gap-3">
-            <PhoneCall className="w-5 h-5 text-green-400" />
+          <div className="bg-white border border-[#E4E7ED] rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 bg-navy/10 rounded-lg flex items-center justify-center">
+              <PhoneCall className="w-5 h-5 text-navy" />
+            </div>
             <div>
-              <div className="text-sm text-zinc-400">Répondus</div>
-              <div className="text-lg font-bold">{stats.completed_calls}</div>
+              <div className="text-sm text-text-secondary font-medium">Répondus</div>
+              <div className="text-lg font-bold text-navy">{stats.completed_calls}</div>
             </div>
           </div>
-          <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-4 flex items-center gap-3">
-            <Phone className="w-5 h-5 text-red-400" />
+          <div className="bg-white border border-[#E4E7ED] rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+              <Phone className="w-5 h-5 text-red-500" />
+            </div>
             <div>
-              <div className="text-sm text-zinc-400">Manqués</div>
-              <div className="text-lg font-bold">{stats.missed_calls}</div>
+              <div className="text-sm text-text-secondary font-medium">Manqués</div>
+              <div className="text-lg font-bold text-navy">{stats.missed_calls}</div>
             </div>
           </div>
         </div>
       )}
 
       {/* Recent calls */}
-      <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl">
-        <div className="p-5 border-b border-zinc-800">
-          <h3 className="text-lg font-semibold">Derniers appels</h3>
+      <div className="bg-white border border-[#E4E7ED] rounded-xl shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-[#E4E7ED]">
+          <h3 className="text-lg font-semibold text-navy" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Derniers appels
+          </h3>
         </div>
         <div>
           {calls.length === 0 ? (
-            <p className="text-zinc-500 text-center py-8">
+            <p className="text-text-muted text-center py-8">
               Aucun appel pour le moment.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                  <tr className="bg-navy">
+                    <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                       Date
                     </th>
-                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                    <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                       Appelant
                     </th>
-                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                    <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                       Durée
                     </th>
-                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                    <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                       Statut
                     </th>
-                    <th className="text-left text-xs text-zinc-500 uppercase tracking-wider px-5 py-3">
+                    <th className="text-left text-xs text-white/80 uppercase tracking-wider px-5 py-3 font-semibold">
                       Coût
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {calls.map((c) => (
+                  {calls.map((c, idx) => (
                     <tr
                       key={c.id}
-                      className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+                      className={`border-b border-[#E4E7ED] hover:bg-gold/5 cursor-pointer transition-colors ${idx % 2 === 1 ? "bg-[#F9FAFB]" : ""}`}
                       onClick={() => setLocation(`/calls/${c.id}`)}
                     >
-                      <td className="px-5 py-3 text-sm text-zinc-300">
+                      <td className="px-5 py-3 text-sm text-text-secondary">
                         {c.start_time ? formatDateParis(c.start_time) : "—"}
                       </td>
-                      <td className="px-5 py-3 text-sm font-mono">
+                      <td className="px-5 py-3 text-sm font-mono text-navy font-medium">
                         {c.from_number || "Masqué"}
                       </td>
-                      <td className="px-5 py-3 text-sm">
+                      <td className="px-5 py-3 text-sm text-text-secondary">
                         {c.duration_seconds
                           ? formatDuration(c.duration_seconds)
                           : "—"}
                       </td>
                       <td className="px-5 py-3">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[c.status] || statusColor.unknown}`}
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusColor[c.status] || statusColor.unknown}`}
                         >
                           {statusLabel[c.status] || c.status}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-sm text-zinc-400">
+                      <td className="px-5 py-3 text-sm text-text-secondary">
                         {formatCost(c.cost)}
                       </td>
                     </tr>
