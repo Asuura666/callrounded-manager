@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: callrounded
+      POSTGRES_USER: callrounded
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-callrounded}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U callrounded"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8200:8200"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://callrounded:${POSTGRES_PASSWORD:-callrounded}@db:5432/callrounded
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-please}
+      CALLROUNDED_API_URL: ${CALLROUNDED_API_URL:-https://api.callrounded.com/v1}
+      CALLROUNDED_API_KEY: ${CALLROUNDED_API_KEY:-demo}
+      FRONTEND_URL: ${FRONTEND_URL:-https://callrounded.apps.ilanewep.cloud}
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "127.0.0.1:3100:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
