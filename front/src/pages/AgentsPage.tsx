@@ -1,101 +1,127 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Headset, Pause, Play } from "lucide-react";
+import { Headset, Globe, Mic, MessageSquare } from "lucide-react";
 import { api } from "@/lib/api";
 
-interface Agent {
-  id: string;
+interface AgentVoice {
+  provider: string;
   name: string;
-  status: string;
-  description: string | null;
+}
+
+interface Agent {
+  name: string;
+  language: string;
+  initial_message: string;
+  base_prompt?: string;
+  voice?: AgentVoice;
+  states?: unknown[];
+  tools?: unknown[];
 }
 
 export function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toggling, setToggling] = useState<string | null>(null);
 
-  const fetchAgents = () => {
-    api.get<Agent[]>("/agents").then(setAgents).catch(() => {}).finally(() => setLoading(false));
-  };
+  useEffect(() => {
+    api
+      .get<Agent[]>("/agents")
+      .then(setAgents)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  useEffect(() => { fetchAgents(); }, []);
-
-  const toggleStatus = async (agent: Agent) => {
-    const newStatus = agent.status === "active" ? "inactive" : "active";
-    setToggling(agent.id);
-    try {
-      await api.patch(`/agents/${agent.id}`, { status: newStatus });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, status: newStatus } : a)));
-    } catch {} finally {
-      setToggling(null);
-    }
-  };
-
-  if (loading) return <div className="text-text-muted text-center py-12">Chargement...</div>;
+  if (loading)
+    return (
+      <div className="text-zinc-500 text-center py-12">Chargement...</div>
+    );
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Mon réceptionniste</h2>
-        <p className="text-text-secondary mt-1">
-          Gérez votre assistant téléphonique IA
+        <h2 className="text-2xl font-bold">Votre Réceptionniste</h2>
+        <p className="text-zinc-400 mt-1">
+          Votre assistant téléphonique IA
         </p>
       </div>
 
       {agents.length === 0 ? (
-        <Card className="bg-surface border-border">
-          <CardContent className="py-12 text-center">
-            <Headset className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-40" />
-            <h3 className="text-lg font-medium mb-2">Aucun réceptionniste configuré</h3>
-            <p className="text-text-muted max-w-md mx-auto">
-              Votre réceptionniste IA apparaîtra ici une fois configuré. Il répondra aux appels de vos clients et prendra les rendez-vous automatiquement.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-12 text-center">
+          <Headset className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
+          <h3 className="text-lg font-medium mb-2">
+            Aucun réceptionniste configuré
+          </h3>
+          <p className="text-zinc-500 max-w-md mx-auto">
+            Votre réceptionniste IA apparaîtra ici une fois configuré.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {agents.map((agent) => {
-            const isActive = agent.status === "active";
-            return (
-              <Card key={agent.id} className="bg-surface border-border">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isActive ? "bg-success/20" : "bg-zinc-500/20"}`}>
-                        <Headset className={`w-6 h-6 ${isActive ? "text-success" : "text-zinc-400"}`} />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{agent.name || "Réceptionniste"}</CardTitle>
-                        <Badge className={`mt-1 ${isActive ? "bg-success/20 text-success" : "bg-zinc-500/20 text-zinc-400"}`}>
-                          {isActive ? (
-                            <><Play className="w-3 h-3 mr-1" /> Réceptionniste actif</>
-                          ) : (
-                            <><Pause className="w-3 h-3 mr-1" /> Réceptionniste en pause</>
-                          )}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-text-muted">{isActive ? "Actif" : "Pause"}</span>
-                      <Switch
-                        checked={isActive}
-                        onCheckedChange={() => toggleStatus(agent)}
-                        disabled={toggling === agent.id}
-                      />
+        <div className="space-y-6">
+          {agents.map((agent, idx) => (
+            <div
+              key={idx}
+              className="bg-[#1a1a1e] border border-zinc-800 rounded-xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-zinc-800">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <Headset className="w-7 h-7 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold">{agent.name}</h3>
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                        Actif
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-700/50 text-zinc-300">
+                        <Globe className="w-3 h-3" />
+                        {agent.language === "fr"
+                          ? "Français"
+                          : agent.language === "en"
+                            ? "English"
+                            : agent.language}
+                      </span>
+                      {agent.voice && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300">
+                          <Mic className="w-3 h-3" />
+                          {agent.voice.name} ({agent.voice.provider})
+                        </span>
+                      )}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-text-secondary">
-                    {agent.description || "Votre assistant téléphonique IA répond aux appels de vos clients, donne les informations sur votre salon et prend les rendez-vous."}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+              </div>
+
+              {/* Initial message */}
+              <div className="p-6 border-b border-zinc-800">
+                <div className="flex items-start gap-3">
+                  <MessageSquare className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-400 mb-2">
+                      Message d'accueil
+                    </h4>
+                    <p className="text-sm text-zinc-200 leading-relaxed bg-zinc-800/50 rounded-lg p-3">
+                      {agent.initial_message || "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Base prompt summary */}
+              {agent.base_prompt && (
+                <div className="p-6">
+                  <h4 className="text-sm font-medium text-zinc-400 mb-2">
+                    Instructions (résumé)
+                  </h4>
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    {agent.base_prompt.length > 200
+                      ? agent.base_prompt.substring(0, 200) + "..."
+                      : agent.base_prompt}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
