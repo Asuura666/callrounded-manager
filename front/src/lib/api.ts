@@ -19,13 +19,11 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
   });
 
   if (res.status === 401) {
-    // Try refresh
     const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
       credentials: "include",
     });
     if (refreshRes.ok) {
-      // Retry original request
       const retryRes = await fetch(url, {
         credentials: "include",
         headers: { "Content-Type": "application/json", ...init.headers },
@@ -34,9 +32,7 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
       if (!retryRes.ok) throw new Error(`HTTP ${retryRes.status}`);
       return retryRes.json();
     }
-    // Redirect to login
-    window.location.href = "/login";
-    throw new Error("Non authentifié");
+    throw new Error("Non authentifie");
   }
 
   if (!res.ok) {
