@@ -61,6 +61,16 @@
   --color-warning: #eab308;
   --font-sans: "Montserrat", system-ui, -apple-system, sans-serif;
   --font-heading: "Playfair Display", Georgia, serif;
+
+  /* Custom animations */
+  --animate-fade-in: fade-in 0.4s ease-out forwards;
+  --animate-slide-up: slide-up 0.5s ease-out forwards;
+  --animate-slide-in-left: slide-in-left 0.4s ease-out forwards;
+  --animate-scale-in: scale-in 0.3s ease-out forwards;
+  --animate-pulse-gold: pulse-gold 2s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --animate-spin-slow: spin 2s linear infinite;
+  --animate-float: float 3s ease-in-out infinite;
 }
 
 /* W&I Light Theme */
@@ -110,4 +120,136 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: "Playfair Display", Georgia, serif;
   }
+}
+
+/* ========================================
+   W&I Premium Animations (Keyframes)
+   ======================================== */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 77, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(201, 162, 77, 0.3); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ========================================
+   Premium Card Hover Effects
+   ======================================== */
+
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(14, 42, 71, 0.1), 0 8px 10px -6px rgba(14, 42, 71, 0.05);
+  border-color: var(--color-gold);
+}
+
+/* ========================================
+   Skeleton Loading Component
+   ======================================== */
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #E4E7ED 25%, #F7F8FA 50%, #E4E7ED 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ========================================
+   Premium Button Enhancements
+   ======================================== */
+
+.btn-gold {
+  background-color: #C9A24D;
+  color: #0E2A47;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gold:hover {
+  background-color: #D4B46A;
+  box-shadow: 0 4px 15px rgba(201, 162, 77, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(201, 162, 77, 0.3);
+}
+
+/* ========================================
+   Table Enhancements
+   ======================================== */
+
+.table-row-hover {
+  transition: all 0.2s ease;
+}
+
+.table-row-hover:hover {
+  background-color: rgba(201, 162, 77, 0.08);
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EFF1F5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9D1DC;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B0BAC8;
+}
+
+/* ========================================
+   Typography Helpers
+   ======================================== */
+
+.font-heading {
+  font-family: "Playfair Display", Georgia, serif;
+}
+
+.font-body {
+  font-family: "Montserrat", system-ui, -apple-system, sans-serif;
 }

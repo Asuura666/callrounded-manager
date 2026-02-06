@@ -8,6 +8,8 @@ import { CallsPage } from "@/pages/CallsPage";
 import { CallDetailPage } from "@/pages/CallDetailPage";
 import { PhoneNumbersPage } from "@/pages/PhoneNumbersPage";
 import { KnowledgeBasesPage } from "@/pages/KnowledgeBasesPage";
+import { LoadingSpinner } from "@/components/ui/skeleton";
+import { Sparkles } from "lucide-react";
 
 export default function App() {
   const { user, loading, login, logout } = useAuth();
@@ -15,13 +17,20 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-navy">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gold mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            W&I
-          </h1>
-          <div className="w-12 h-0.5 bg-gold/40 rounded-full mx-auto mb-4" />
-          <p className="text-white/50 text-sm">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center bg-navy relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        </div>
+        
+        <div className="text-center relative z-10" style={{ animation: "fade-in 0.4s ease-out forwards" }}>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <h1 className="text-4xl font-bold text-gold font-heading">W&I</h1>
+            <Sparkles className="w-6 h-6 text-gold/60 animate-pulse" />
+          </div>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-gold/40 to-transparent rounded-full mx-auto mb-6" />
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-white/50 text-sm animate-pulse">Chargement...</p>
         </div>
       </div>
     );
@@ -29,12 +38,7 @@ export default function App() {
 
   if (!user) {
     return (
-      <LoginPage
-        onLogin={async (email, password) => {
-          await login(email, password);
-          setLocation("/");
-        }}
-      />
+      <LoginPage onLogin={async (email, password) => { await login(email, password); setLocation("/"); }} />
     );
   }
 
@@ -48,7 +52,13 @@ export default function App() {
         <Route path="/phone-numbers" component={PhoneNumbersPage} />
         <Route path="/knowledge-bases" component={KnowledgeBasesPage} />
         <Route>
-          <div className="text-center py-12 text-text-muted">Page introuvable</div>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ animation: "float 3s ease-in-out infinite" }}>
+              <span className="text-3xl">🔍</span>
+            </div>
+            <h2 className="text-xl font-semibold text-navy font-heading mb-2">Page introuvable</h2>
+            <p className="text-text-muted">La page que vous recherchez n'existe pas.</p>
+          </div>
         </Route>
       </Switch>
     </AppLayout>
