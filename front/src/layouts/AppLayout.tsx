@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Headset, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
+import { LayoutDashboard, BarChart3, Headset, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
 import { useState } from "react";
 import type { User } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/agents", label: "Mon réceptionniste", icon: Headset },
   { href: "/calls", label: "Historique appels", icon: PhoneCall },
   { href: "/phone-numbers", label: "Numéros", icon: Phone },

@@ -156,3 +156,63 @@ class KnowledgeBaseCache(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     synced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ============================================================================
+# SPRINT 3 - TEMPLATES & ANALYTICS
+# ============================================================================
+
+class AgentTemplate(Base):
+    """Reusable agent configuration templates."""
+    __tablename__ = "agent_templates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), 
+        ForeignKey("tenants.id", ondelete="CASCADE"), 
+        nullable=True
+    )
+    
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, default="custom")
+    icon: Mapped[str] = mapped_column(String(50), nullable=False, default="🤖")
+    is_preset: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    
+    greeting: Mapped[str] = mapped_column(Text, nullable=False)
+    system_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    voice: Mapped[str] = mapped_column(String(50), nullable=False, default="emma")
+    language: Mapped[str] = mapped_column(String(10), nullable=False, default="fr-FR")
+    
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class WeeklyReport(Base):
+    """Weekly analytics reports."""
+    __tablename__ = "weekly_reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), 
+        ForeignKey("tenants.id", ondelete="CASCADE"), 
+        nullable=False
+    )
+    
+    week_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    week_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    
+    total_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    completed_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    missed_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    avg_duration: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    total_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    
+    calls_change_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    completed_change_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sent_to: Mapped[str | None] = mapped_column(Text, nullable=True)

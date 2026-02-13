@@ -10,6 +10,7 @@ import { PhoneNumbersPage } from "@/pages/PhoneNumbersPage";
 import { KnowledgeBasesPage } from "@/pages/KnowledgeBasesPage";
 import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AgentBuilderPage } from "@/pages/AgentBuilderPage";
+import { AnalyticsDashboard } from "@/pages/AnalyticsDashboard";
 import { LoadingSpinner } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 
@@ -63,6 +64,7 @@ export default function App() {
       <Switch>
         {/* Main routes */}
         <Route path="/" component={DashboardPage} />
+        <Route path="/analytics" component={AnalyticsDashboard} />
         <Route path="/agents" component={AgentsPage} />
         <Route path="/calls" component={CallsPage} />
         <Route path="/calls/:id" component={CallDetailPage} />
