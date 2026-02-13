@@ -1,9 +1,15 @@
+"""
+CallRounded Manager - Dashboard Routes
+🐺 Updated by Kuro - Added role-based filtering
+"""
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Query
+from sqlalchemy import select
 
-from ..deps import CurrentUser, DBSession, TenantId
+from ..deps import AccessibleAgentIds, CurrentUser, DBSession, TenantId
+from ..models import AgentCache
 from ..services import callrounded as cr
 
 router = APIRouter()
@@ -14,10 +20,14 @@ async def dashboard_stats(
     db: DBSession,
     current_user: CurrentUser,
     tenant_id: TenantId,
+    accessible_agents: AccessibleAgentIds,
     from_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     to_date: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
 ):
-    """Compute dashboard stats from CallRounded API data."""
+    """
+    Compute dashboard stats from CallRounded API data.
+    Users see stats only for their assigned agents.
+    """
     try:
         raw = await cr.list_calls(limit=1000)
         calls = raw.get("data", []) if isinstance(raw, dict) else raw
@@ -51,8 +61,15 @@ async def dashboard_stats(
     total_duration = 0.0
     total_cost = 0.0
     duration_count = 0
+    seen_agents = set()
 
     for c in calls:
+        agent_id = str(c.get("agent_id", "")) if c.get("agent_id") else None
+        
+        # Filter by accessible agents (role-based)
+        if accessible_agents is not None and agent_id not in accessible_agents:
+            continue
+        
         start_str = c.get("start_time")
         start_dt = None
         if start_str:
@@ -69,6 +86,9 @@ async def dashboard_stats(
             continue
 
         total_calls += 1
+        
+        if agent_id:
+            seen_agents.add(agent_id)
 
         status = c.get("status", "unknown")
         if status == "completed":
@@ -93,9 +113,22 @@ async def dashboard_stats(
     avg_duration = round(total_duration / duration_count, 1) if duration_count > 0 else 0.0
     response_rate = round((completed_calls / total_calls * 100), 1) if total_calls > 0 else 0.0
 
+    # Count agents
+    if accessible_agents is not None:
+        total_agents = len(accessible_agents)
+        active_agents = len(seen_agents)
+    else:
+        # Admin sees all agents
+        result = await db.execute(
+            select(AgentCache).where(AgentCache.tenant_id == tenant_id)
+        )
+        all_agents = result.scalars().all()
+        total_agents = len(all_agents)
+        active_agents = sum(1 for a in all_agents if a.status == "active")
+
     return {
-        "total_agents": 1,
-        "active_agents": 1,
+        "total_agents": total_agents,
+        "active_agents": active_agents,
         "total_calls": total_calls,
         "total_calls_today": calls_today,
         "completed_calls": completed_calls,
