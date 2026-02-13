@@ -1,59 +1,75 @@
 # CallRounded Manager — Progress Report
 
-**Date** : 2026-02-13 01:00 UTC
+**Date** : 2026-02-13 01:10 UTC
 **Branche** : `Shiro/white_cart`
+**Status** : ✅ Phase 1 & 2 COMPLETE
 
 ---
 
-## ✅ Terminé
+## ✅ Phase 1 : Système Admin/User — DONE
 
-### Phase 1 : Système Admin/User
-
-#### Backend (Kuro 🐺) — Commit `c32d46c`
+### Backend (Kuro 🐺) — Commit `c32d46c`
 - [x] Enum `Role` (SUPER_ADMIN, TENANT_ADMIN, USER)
-- [x] Table `UserAgentAssignment` (many-to-many)
+- [x] Table `UserAgentAssignment`
 - [x] Migration Alembic
-- [x] Routes `/api/admin/users` (CRUD complet)
-- [x] Routes `/api/admin/users/{id}/agents` (assign/remove)
-- [x] Middleware `AdminUser` pour vérifier les permissions
-- [x] Filtrage automatique des agents/calls par user
+- [x] Routes CRUD `/api/admin/users`
+- [x] Routes assignation `/api/admin/users/{id}/agents`
+- [x] Middleware `AdminUser`
+- [x] Filtrage automatique par rôle
 - [x] Logging structuré
 
-#### Frontend (Shiro 🦊) — Commit `255f157`
-- [x] Hook `useRole` pour vérifier les permissions
-- [x] Page `AdminUsersPage` avec :
-  - Liste des users avec stats
-  - Modal création user
-  - Dropdown actions (promouvoir, supprimer)
-  - Modal assignation agents
-- [x] Page `AgentBuilderPage` avec :
-  - Interface chat
-  - Preview agent sidebar
-  - Suggestions rapides
-- [x] Layout avec section admin (visible si admin)
-- [x] Route guards (`AdminRoute`)
+### Frontend (Shiro 🦊) — Commit `255f157`
+- [x] Hook `useRole`
+- [x] `AdminUsersPage` (CRUD + assignation)
+- [x] Layout avec section admin
+- [x] Route guards
 
 ---
 
-## 🔄 En cours
+## ✅ Phase 2 : LLM Agent Builder — DONE
 
-### Phase 2 : Création d'agent via LLM
+### Backend (Shiro 🦊) — Commit `c1d64ef`
+- [x] Service `llm_service.py` (Claude integration)
+- [x] Route `POST /api/admin/llm/chat`
+- [x] Route `POST /api/admin/llm/create-agent`
+- [x] Function `create_agent` in callrounded service
+- [x] Config `ANTHROPIC_API_KEY`
 
-#### Backend (Kuro 🐺)
-- [ ] Route `POST /api/admin/llm/chat`
-- [ ] Service LLM avec system prompt
-- [ ] Function calling pour extraire paramètres
-- [ ] Intégration CallRounded API pour création
-
-#### Frontend (Shiro 🦊)
-- [x] Interface chat déjà prête
-- [ ] Tests d'intégration quand backend ready
+### Frontend (Shiro 🦊) — Commit `255f157`
+- [x] `AgentBuilderPage` (chat interface)
+- [x] Agent preview sidebar
+- [x] Suggestions rapides
 
 ---
 
-## 📊 Commits
+## 📊 API Endpoints
 
 ```
+# Admin Users
+GET    /api/admin/users
+POST   /api/admin/users
+GET    /api/admin/users/{id}
+PATCH  /api/admin/users/{id}
+DELETE /api/admin/users/{id}
+GET    /api/admin/users/{id}/agents
+POST   /api/admin/users/{id}/agents
+POST   /api/admin/users/{id}/agents/bulk
+DELETE /api/admin/users/{id}/agents/{agent_id}
+GET    /api/admin/agents
+
+# LLM Agent Builder
+POST   /api/admin/llm/chat
+POST   /api/admin/llm/create-agent
+```
+
+---
+
+## 📝 Commits (latest first)
+
+```
+c1d64ef feat: Add LLM Agent Builder backend 🦊
+df25eb5 test: Add admin routes tests 🦊
+f818a06 docs: Update progress report 🦊
 255f157 feat(frontend): Admin UI + Agent Builder chat interface 🦊
 c32d46c feat: add admin user management and role-based filtering 🐺
 ae78fc4 docs: Add improvement plan
@@ -64,15 +80,19 @@ c0f6d56 docs: Add CallRounded API reference
 
 ## 🧪 Tests
 
-### Backend
-- [ ] Tests admin routes (à ajouter)
-- [ ] Tests permissions
+- [x] `api/tests/test_admin.py` — Tests admin routes
 - [ ] Tests LLM endpoint
-
-### Frontend
-- [ ] Tests manuels UI
-- [ ] Vérifier responsive
+- [ ] Tests intégration E2E
 
 ---
 
-*Rapport généré par Shiro 🦊*
+## 🚀 Prochaines étapes
+
+1. **Configurer `ANTHROPIC_API_KEY`** dans `.env`
+2. **Rebuild frontend** avec les nouvelles pages
+3. **Tester l'intégration** en local
+4. **Merge PR** vers `main`
+
+---
+
+*Rapport mis à jour par Shiro 🦊*
