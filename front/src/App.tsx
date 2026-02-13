@@ -14,6 +14,7 @@ import { AgentBuilderPage } from "@/pages/AgentBuilderPage";
 import { AnalyticsDashboard } from "@/pages/AnalyticsDashboard";
 import { AlertsConfig } from "@/pages/AlertsConfig";
 import { ReportSettings } from "@/pages/ReportSettings";
+import { CalendarIntegration } from "@/pages/CalendarIntegration" from "@/pages/ReportSettings";
 import { LoadingSpinner } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 

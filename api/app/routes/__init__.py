@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import admin, agents, alerts, analytics, auth, calls, dashboard, knowledge_bases, llm, phone_numbers, templates
+from . import admin, agents, alerts, analytics, auth, calendar, calls, dashboard, knowledge_bases, llm, phone_numbers, templates
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -13,4 +13,5 @@ api_router.include_router(admin.router, tags=["admin"])
 api_router.include_router(llm.router, tags=["llm"])
 api_router.include_router(templates.router, tags=["templates"])
 api_router.include_router(analytics.router, tags=["analytics"])
-api_router.include_router(alerts.router, tags=["alerts"])  # Sprint 4
+api_router.include_router(alerts.router, tags=["alerts"])
+api_router.include_router(calendar.router, tags=["calendar"])  # Sprint 5

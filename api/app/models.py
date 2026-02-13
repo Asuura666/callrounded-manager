@@ -267,3 +267,28 @@ class AlertEvent(Base):
     acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ============================================================================
+# SPRINT 5 - CALENDAR INTEGRATION
+# ============================================================================
+
+class CalendarIntegration(Base):
+    """Google Calendar integration settings."""
+    __tablename__ = "calendar_integrations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    access_token: Mapped[str] = mapped_column(Text, nullable=False)
+    refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    
+    google_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    calendar_id: Mapped[str] = mapped_column(String(255), nullable=False, default="primary")
+    
+    last_sync: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    events_synced: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    
+    connected_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
