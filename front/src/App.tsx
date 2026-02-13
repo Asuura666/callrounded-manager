@@ -1,4 +1,4 @@
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, Redirect } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/layouts/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
@@ -8,8 +8,22 @@ import { CallsPage } from "@/pages/CallsPage";
 import { CallDetailPage } from "@/pages/CallDetailPage";
 import { PhoneNumbersPage } from "@/pages/PhoneNumbersPage";
 import { KnowledgeBasesPage } from "@/pages/KnowledgeBasesPage";
+import { AdminUsersPage } from "@/pages/AdminUsersPage";
+import { AgentBuilderPage } from "@/pages/AgentBuilderPage";
 import { LoadingSpinner } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
+
+// Admin route guard
+function AdminRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user } = useAuth();
+  
+  if (user?.role !== "ADMIN") {
+    console.log("[AdminRoute] Access denied for user:", user?.email, "role:", user?.role);
+    return <Redirect to="/" />;
+  }
+  
+  return <Component />;
+}
 
 export default function App() {
   const { user, loading, login, logout } = useAuth();
@@ -42,15 +56,28 @@ export default function App() {
     );
   }
 
+  console.log("[App] User logged in:", user.email, "role:", user.role);
+
   return (
     <AppLayout user={user} onLogout={logout}>
       <Switch>
+        {/* Main routes */}
         <Route path="/" component={DashboardPage} />
         <Route path="/agents" component={AgentsPage} />
         <Route path="/calls" component={CallsPage} />
         <Route path="/calls/:id" component={CallDetailPage} />
         <Route path="/phone-numbers" component={PhoneNumbersPage} />
         <Route path="/knowledge-bases" component={KnowledgeBasesPage} />
+        
+        {/* Admin routes */}
+        <Route path="/admin/users">
+          <AdminRoute component={AdminUsersPage} />
+        </Route>
+        <Route path="/admin/agent-builder">
+          <AdminRoute component={AgentBuilderPage} />
+        </Route>
+        
+        {/* 404 */}
         <Route>
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ animation: "float 3s ease-in-out infinite" }}>

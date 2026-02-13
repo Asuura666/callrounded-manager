@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Headset, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles } from "lucide-react";
+import { LayoutDashboard, Headset, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
 import { useState } from "react";
 import type { User } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
@@ -10,6 +11,11 @@ const navItems = [
   { href: "/calls", label: "Historique appels", icon: PhoneCall },
   { href: "/phone-numbers", label: "Numéros", icon: Phone },
   { href: "/knowledge-bases", label: "Base de connaissances", icon: BookOpen },
+];
+
+const adminItems = [
+  { href: "/admin/users", label: "Utilisateurs", icon: Users },
+  { href: "/admin/agent-builder", label: "Créer un agent", icon: Wand2 },
 ];
 
 interface Props {
@@ -21,6 +27,24 @@ interface Props {
 export function AppLayout({ user, onLogout, children }: Props) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAdmin = user.role === "ADMIN";
+
+  const NavLink = ({ item, mobile = false }: { item: typeof navItems[0]; mobile?: boolean }) => {
+    const active = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+    return (
+      <Link key={item.href} href={item.href}>
+        <div
+          onClick={mobile ? () => setSidebarOpen(false) : undefined}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            active ? "bg-gold/15 text-gold border-l-2 border-gold ml-0" : "text-white/70 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <item.icon className={`w-5 h-5 transition-colors ${active ? "text-gold" : ""}`} />
+          {item.label}
+        </div>
+      </Link>
+    );
+  };
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
     <>
@@ -51,29 +75,41 @@ export function AppLayout({ user, onLogout, children }: Props) {
       </div>
 
       <nav className="flex-1 px-3 space-y-1 mt-2">
-        {navItems.map((item) => {
-          const active = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-          return (
-            <Link key={item.href} href={item.href}>
-              <div
-                onClick={mobile ? () => setSidebarOpen(false) : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                  active ? "bg-gold/15 text-gold border-l-2 border-gold ml-0" : "text-white/70 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <item.icon className={`w-5 h-5 transition-colors ${active ? "text-gold" : ""}`} />
-                {item.label}
+        {navItems.map((item) => (
+          <NavLink key={item.href} item={item} mobile={mobile} />
+        ))}
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <>
+            <div className="pt-4 pb-2">
+              <Separator className="bg-white/10" />
+              <div className="flex items-center gap-2 px-3 py-2 mt-2">
+                <Shield className="w-4 h-4 text-gold/60" />
+                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Administration</span>
               </div>
-            </Link>
-          );
-        })}
+            </div>
+            {adminItems.map((item) => (
+              <NavLink key={item.href} item={item} mobile={mobile} />
+            ))}
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium text-white/90 truncate">{user.email}</p>
-            <p className="text-xs text-white/50">Administrateur</p>
+            <p className="text-xs text-white/50 flex items-center gap-1">
+              {isAdmin ? (
+                <>
+                  <Shield className="w-3 h-3 text-gold" />
+                  <span className="text-gold">Administrateur</span>
+                </>
+              ) : (
+                "Utilisateur"
+              )}
+            </p>
           </div>
           <Button variant="ghost" size="icon" onClick={onLogout} title="Déconnexion" className="text-white/50 hover:text-gold hover:bg-white/5 transition-colors">
             <LogOut className="w-4 h-4" />
@@ -115,7 +151,7 @@ export function AppLayout({ user, onLogout, children }: Props) {
         <div className="flex-1 overflow-y-auto p-4 md:p-8">{children}</div>
 
         <nav className="md:hidden flex justify-around border-t border-border bg-white py-2 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-          {navItems.map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const active = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href}>
@@ -126,6 +162,14 @@ export function AppLayout({ user, onLogout, children }: Props) {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link href="/admin/users">
+              <div className={`flex flex-col items-center gap-0.5 text-xs cursor-pointer transition-all ${location.startsWith("/admin") ? "text-gold scale-105" : "text-text-muted hover:text-navy"}`}>
+                <Shield className="w-5 h-5" />
+                <span>Admin</span>
+              </div>
+            </Link>
+          )}
         </nav>
       </main>
     </div>
