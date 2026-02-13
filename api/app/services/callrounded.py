@@ -146,3 +146,26 @@ async def get_knowledge_base(kb_id: str) -> dict[str, Any] | None:
     except Exception as exc:
         logger.warning("CallRounded get_knowledge_base(%s) failed: %s", kb_id, exc)
         return None
+
+
+async def create_agent(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Create a new agent via CallRounded API.
+    
+    Payload should include:
+    - name: str
+    - description: str (optional)
+    - greeting_message: str (optional)
+    - language: str (default: fr-FR)
+    - voice: str (optional)
+    """
+    try:
+        logger.info("CallRounded create_agent: %s", payload.get("name"))
+        async with _client() as client:
+            resp = await client.post("/agents", json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            logger.info("CallRounded agent created: %s", data.get("data", {}).get("id"))
+            return data.get("data", data)
+    except Exception as exc:
+        logger.error("CallRounded create_agent failed: %s", exc)
+        return None

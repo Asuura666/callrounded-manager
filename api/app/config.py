@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     CALLROUNDED_API_KEY: str = "demo"
     CALLROUNDED_AGENT_ID: str = ""
 
+    # LLM (Agent Builder)
+    ANTHROPIC_API_KEY: str = ""
+
     # CORS
     FRONTEND_URL: str = "http://localhost:3100"
 
