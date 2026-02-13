@@ -216,3 +216,54 @@ class WeeklyReport(Base):
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sent_to: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+# ============================================================================
+# SPRINT 4 - ALERTS
+# ============================================================================
+
+class AlertRule(Base):
+    """Alert rules configuration."""
+    __tablename__ = "alert_rules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rule_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    conditions: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    notify_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notify_webhook: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    webhook_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_triggered: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    trigger_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cooldown_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AlertEvent(Base):
+    """Alert events history."""
+    __tablename__ = "alert_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    rule_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("alert_rules.id", ondelete="CASCADE"), nullable=False)
+    
+    severity: Mapped[str] = mapped_column(String(20), nullable=False, default="warning")
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    context: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    notification_channels: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
