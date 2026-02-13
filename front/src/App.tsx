@@ -13,6 +13,7 @@ import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AgentBuilderPage } from "@/pages/AgentBuilderPage";
 import { AnalyticsDashboard } from "@/pages/AnalyticsDashboard";
 import { AlertsConfig } from "@/pages/AlertsConfig";
+import { ReportSettings } from "@/pages/ReportSettings";
 import { LoadingSpinner } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/calls" component={CallHistoryRich} />
         <Route path="/calls/:id" component={CallDetailPage} />
         <Route path="/alerts" component={AlertsConfig} />
+        <Route path="/reports" component={ReportSettings} />
         <Route path="/phone-numbers" component={PhoneNumbersPage} />
         <Route path="/knowledge-bases" component={KnowledgeBasesPage} />
         

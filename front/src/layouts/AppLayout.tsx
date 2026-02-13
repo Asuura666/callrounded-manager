@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, BarChart3, Headset, BellRing, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
+import { LayoutDashboard, BarChart3, Headset, BellRing, Mail, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
 import { useState } from "react";
 import type { User } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/phone-numbers", label: "Numéros", icon: Phone },
   { href: "/knowledge-bases", label: "Base de connaissances", icon: BookOpen },
   { href: "/alerts", label: "Alertes", icon: BellRing },
+  { href: "/reports", label: "Rapports", icon: Mail },
 ];
 
 const adminItems = [
