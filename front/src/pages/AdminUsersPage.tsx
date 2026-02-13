@@ -31,7 +31,7 @@ export function AdminUsersPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newUser, setNewUser] = useState({ email: "", password: "", role: "USER" as const });
+  const [newUser, setNewUser] = useState({ email: "", password: "", role: "USER" as "USER" | "ADMIN" });
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 
   useEffect(() => {

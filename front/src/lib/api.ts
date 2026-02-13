@@ -40,6 +40,11 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
     throw new Error(body.detail || `HTTP ${res.status}`);
   }
 
+  // Handle 204 No Content
+  if (res.status === 204) {
+    return {} as T;
+  }
+
   return res.json();
 }
 
@@ -50,4 +55,6 @@ export const api = {
     request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
+  delete: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }),
 };
