@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, BarChart3, Headset, BellRing, Mail, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
+import { LayoutDashboard, BarChart3, Headset, BellRing, Mail, CalendarDays, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useState } from "react";
 import type { User } from "@/hooks/useAuth";
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/knowledge-bases", label: "Base de connaissances", icon: BookOpen },
   { href: "/alerts", label: "Alertes", icon: BellRing },
   { href: "/reports", label: "Rapports", icon: Mail },
+  { href: "/calendar", label: "Calendrier", icon: CalendarDays },
 ];
 
 const adminItems = [

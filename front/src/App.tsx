@@ -14,7 +14,7 @@ import { AgentBuilderPage } from "@/pages/AgentBuilderPage";
 import { AnalyticsDashboard } from "@/pages/AnalyticsDashboard";
 import { AlertsConfig } from "@/pages/AlertsConfig";
 import { ReportSettings } from "@/pages/ReportSettings";
-import { CalendarIntegration } from "@/pages/CalendarIntegration" from "@/pages/ReportSettings";
+import { CalendarIntegration } from "@/pages/CalendarIntegration";
 import { LoadingSpinner } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 
@@ -74,6 +74,7 @@ export default function App() {
         <Route path="/calls/:id" component={CallDetailPage} />
         <Route path="/alerts" component={AlertsConfig} />
         <Route path="/reports" component={ReportSettings} />
+        <Route path="/calendar" component={CalendarIntegration} />
         <Route path="/phone-numbers" component={PhoneNumbersPage} />
         <Route path="/knowledge-bases" component={KnowledgeBasesPage} />
         
