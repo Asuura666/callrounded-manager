@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, BarChart3, Headset, BellRing, Mail, Phone, PhoneCall, BookOpen, LogOut, Menu, X, Sparkles, Users, Wand2, Shield } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { useState } from "react";
 import type { User } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
