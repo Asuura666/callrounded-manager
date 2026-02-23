@@ -32,7 +32,7 @@ interface Props {
 export function AppLayout({ user, onLogout, children }: Props) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isAdmin = user.role === "ADMIN";
+  const isAdmin = user.role === "ADMIN" || user.role === "TENANT_ADMIN" || user.role === "SUPER_ADMIN";
 
   const NavLink = ({ item, mobile = false }: { item: typeof navItems[0]; mobile?: boolean }) => {
     const active = location === item.href || (item.href !== "/" && location.startsWith(item.href));

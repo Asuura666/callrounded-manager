@@ -199,7 +199,7 @@ export function CallHistoryRich() {
       setCalls(data.calls || []);
     } catch (error) {
       console.log("[CallHistory] Using mock data");
-      setCalls(MOCK_CALLS);
+      setCalls([]);
     } finally {
       setLoading(false);
     }
@@ -209,8 +209,13 @@ export function CallHistoryRich() {
     setExpandedCall(expandedCall === callId ? null : callId);
   }
 
-  function openTranscript(call: CallRecord) {
-    setSelectedCall(call);
+  async function openTranscript(call: CallRecord) {
+    try {
+      const details = await api.get<CallRecord>(`/calls/${call.id}`);
+      setSelectedCall(details);
+    } catch (e) {
+      setSelectedCall(call);
+    }
     setTranscriptOpen(true);
   }
 

@@ -1,0 +1,47 @@
+services:
+  db-preprod:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: callrounded_preprod
+      POSTGRES_USER: callrounded
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-callrounded}
+    volumes:
+      - pgdata_preprod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U callrounded"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-preprod:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      db-preprod:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8201:8200"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://callrounded:${POSTGRES_PASSWORD:-callrounded}@db-preprod:5432/callrounded_preprod
+      JWT_SECRET: ${JWT_SECRET:-preprod-secret}
+      CALLROUNDED_API_URL: ${CALLROUNDED_API_URL:-https://api.callrounded.com/v1}
+      CALLROUNDED_API_KEY: ${CALLROUNDED_API_KEY:-demo}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CALLROUNDED_AGENT_ID: ${CALLROUNDED_AGENT_ID:-}
+      FRONTEND_URL: https://callrounded-preprod.apps.ilanewep.cloud
+
+  front-preprod:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "127.0.0.1:3101:80"
+    depends_on:
+      - api-preprod
+
+volumes:
+  pgdata_preprod:

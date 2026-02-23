@@ -129,7 +129,7 @@ export function AlertsConfig() {
       setRules(data.rules || []);
     } catch (error) {
       console.log("[Alerts] Using mock data");
-      setRules(MOCK_RULES);
+      setRules([]);
     } finally {
       setLoading(false);
     }

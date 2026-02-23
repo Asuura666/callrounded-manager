@@ -109,9 +109,9 @@ export function CalendarIntegration() {
       setStats(statsRes || MOCK_STATS);
     } catch (error) {
       console.log("[Calendar] Using mock data");
-      setStatus(MOCK_STATUS);
-      setEvents(MOCK_EVENTS);
-      setStats(MOCK_STATS);
+      setStatus(null);
+      setEvents([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ export function CalendarIntegration() {
     } catch (error) {
       console.error("[Calendar] Connect failed:", error);
       // Demo: simulate connection
-      setStatus(MOCK_STATUS);
+      setStatus(null);
     }
   }
 

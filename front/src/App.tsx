@@ -22,7 +22,7 @@ import { Sparkles } from "lucide-react";
 function AdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { user } = useAuth();
   
-  if (user?.role !== "ADMIN") {
+  if (!(user?.role === "ADMIN" || user?.role === "TENANT_ADMIN" || user?.role === "SUPER_ADMIN")) {
     console.log("[AdminRoute] Access denied for user:", user?.email, "role:", user?.role);
     return <Redirect to="/" />;
   }

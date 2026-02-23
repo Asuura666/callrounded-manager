@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, TrendingUp, 
-  TrendingDown, Calendar, Users, BarChart3, Activity 
+  TrendingDown, Calendar, Users, BarChart3, Activity, AlertCircle 
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ interface CallStats {
   calls_by_day: { date: string; count: number }[];
   calls_by_hour: { hour: number; count: number }[];
   top_outcomes: { outcome: string; count: number }[];
-  trend_vs_last_week: number; // percentage
+  trend_vs_last_week: number;
 }
 
 interface StatCardProps {
@@ -44,7 +44,7 @@ function StatCard({ title, value, subtitle, icon, trend, color = "navy" }: StatC
             <p className="text-sm text-text-muted font-medium">{title}</p>
             <p className="text-2xl font-bold text-navy mt-1">{value}</p>
             {subtitle && <p className="text-xs text-text-muted mt-1">{subtitle}</p>}
-            {trend !== undefined && (
+            {trend !== undefined && trend !== 0 && (
               <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${trend >= 0 ? "text-green-600" : "text-red-500"}`}>
                 {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 <span>{trend >= 0 ? "+" : ""}{trend}% vs semaine dernière</span>
@@ -63,9 +63,17 @@ function StatCard({ title, value, subtitle, icon, trend, color = "navy" }: StatC
 function SimpleBarChart({ data, label }: { data: { label: string; value: number }[]; label: string }) {
   const max = Math.max(...data.map(d => d.value), 1);
   
+  if (data.length === 0 || data.every(d => d.value === 0)) {
+    return (
+      <div className="flex items-center justify-center h-32 text-text-muted">
+        <p>Aucune donnée disponible</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-text-muted">{label}</p>
+      {label && <p className="text-sm font-medium text-text-muted">{label}</p>}
       <div className="space-y-1.5">
         {data.map((item, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -123,9 +131,24 @@ function HourlyHeatmap({ data }: { data: { hour: number; count: number }[] }) {
   );
 }
 
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mb-4">
+        <BarChart3 className="w-8 h-8 text-gold" />
+      </div>
+      <h3 className="text-lg font-semibold text-navy mb-2">Aucune donnée disponible</h3>
+      <p className="text-text-muted max-w-md">
+        Les statistiques apparaîtront ici une fois que votre réceptionniste IA aura traité des appels.
+      </p>
+    </div>
+  );
+}
+
 export function AnalyticsDashboard() {
   const [stats, setStats] = useState<CallStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<"week" | "month">("week");
 
   useEffect(() => {
@@ -135,45 +158,23 @@ export function AnalyticsDashboard() {
   async function fetchStats() {
     try {
       setLoading(true);
+      setError(null);
       const data = await api.get<CallStats>(`/analytics/calls?period=${period}`);
       setStats(data);
       console.log("[Analytics] Stats loaded:", data);
     } catch (error) {
       console.error("[Analytics] Failed to fetch stats:", error);
-      // Use mock data for now
+      // Show empty state instead of mock data
       setStats({
-        total_calls: 127,
-        answered_calls: 118,
-        missed_calls: 9,
-        avg_duration_seconds: 145,
-        total_duration_seconds: 17115,
-        calls_by_day: [
-          { date: "Lun", count: 23 },
-          { date: "Mar", count: 31 },
-          { date: "Mer", count: 18 },
-          { date: "Jeu", count: 25 },
-          { date: "Ven", count: 22 },
-          { date: "Sam", count: 8 },
-          { date: "Dim", count: 0 },
-        ],
-        calls_by_hour: [
-          { hour: 9, count: 15 },
-          { hour: 10, count: 22 },
-          { hour: 11, count: 18 },
-          { hour: 12, count: 8 },
-          { hour: 13, count: 5 },
-          { hour: 14, count: 19 },
-          { hour: 15, count: 16 },
-          { hour: 16, count: 14 },
-          { hour: 17, count: 10 },
-        ],
-        top_outcomes: [
-          { outcome: "RDV pris", count: 45 },
-          { outcome: "Information", count: 38 },
-          { outcome: "Rappel demandé", count: 22 },
-          { outcome: "Annulation", count: 13 },
-        ],
-        trend_vs_last_week: 12,
+        total_calls: 0,
+        answered_calls: 0,
+        missed_calls: 0,
+        avg_duration_seconds: 0,
+        total_duration_seconds: 0,
+        calls_by_day: [],
+        calls_by_hour: [],
+        top_outcomes: [],
+        trend_vs_last_week: 0,
       });
     } finally {
       setLoading(false);
@@ -181,18 +182,20 @@ export function AnalyticsDashboard() {
   }
 
   function formatDuration(seconds: number): string {
+    if (seconds === 0) return "0m 0s";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
   }
 
   function formatTotalDuration(seconds: number): string {
+    if (seconds === 0) return "0m";
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   }
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
@@ -200,7 +203,26 @@ export function AnalyticsDashboard() {
     );
   }
 
-  const answerRate = Math.round((stats.answered_calls / stats.total_calls) * 100);
+  if (!stats || stats.total_calls === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-navy font-heading flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-gold" />
+            Analytics
+          </h1>
+          <p className="text-text-muted mt-1">Performance de votre réceptionniste IA</p>
+        </div>
+        <Card className="border-gold/20">
+          <CardContent>
+            <EmptyState />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const answerRate = stats.total_calls > 0 ? Math.round((stats.answered_calls / stats.total_calls) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -295,29 +317,35 @@ export function AnalyticsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {stats.top_outcomes.map((outcome, i) => {
-                const total = stats.top_outcomes.reduce((sum, o) => sum + o.count, 0);
-                const percentage = Math.round((outcome.count / total) * 100);
-                
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-navy">{outcome.outcome}</span>
-                        <span className="text-sm text-text-muted">{outcome.count} ({percentage}%)</span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gold rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
+            {stats.top_outcomes.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-text-muted">
+                <p>Aucune donnée disponible</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.top_outcomes.map((outcome, i) => {
+                  const total = stats.top_outcomes.reduce((sum, o) => sum + o.count, 0);
+                  const percentage = total > 0 ? Math.round((outcome.count / total) * 100) : 0;
+                  
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-navy">{outcome.outcome}</span>
+                          <span className="text-sm text-text-muted">{outcome.count} ({percentage}%)</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gold rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
