@@ -113,8 +113,11 @@ export function DashboardPage() {
   };
 
   const fetchCalls = () => {
+    const params: Record<string, string> = { limit: "5" };
+    if (fromDate) params.from_date = fromDate;
+    if (toDate) params.to_date = toDate;
     api
-      .get<CallsResponse>("/calls", { limit: "5" })
+      .get<CallsResponse>("/calls", params)
       .then((res) => setCalls(res.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
