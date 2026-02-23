@@ -1,12 +1,34 @@
 """
 CallRounded Manager - Calls Routes
 """
+import time
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from ..deps import AccessibleAgentIds, CurrentUser, DBSession, TenantId
 from ..services import callrounded as cr
 
 router = APIRouter()
+
+# === Bug #2 fix: agent name cache instead of hardcoded ===
+_agent_name_cache: dict[str, tuple[str, float]] = {}
+_CACHE_TTL = 300  # 5 minutes
+
+
+async def get_agent_name(agent_id: str | None) -> str:
+    """Fetch agent name from CallRounded API with caching."""
+    if not agent_id:
+        return "Agent inconnu"
+    now = time.time()
+    if agent_id in _agent_name_cache:
+        name, cached_at = _agent_name_cache[agent_id]
+        if now - cached_at < _CACHE_TTL:
+            return name
+    agent = await cr.get_agent(agent_id)
+    name = agent.get("name", "Agent inconnu") if agent else "Agent inconnu"
+    _agent_name_cache[agent_id] = (name, now)
+    return name
 
 
 def transform_transcript(raw_transcript):
@@ -35,11 +57,29 @@ async def list_calls(
     page: int = Query(1, ge=1),
     call_status: str | None = Query(None, alias="status"),
     agent_id: str | None = Query(None),
+    from_date: str | None = Query(None),
+    to_date: str | None = Query(None),
 ):
     """List calls with basic info."""
     raw = await cr.list_calls(limit=limit, page=page)
     calls = raw.get("data", []) if isinstance(raw, dict) else raw
     results = []
+
+    # Parse date filters (Bug #4)
+    filter_from = None
+    filter_to = None
+    if from_date:
+        try:
+            filter_from = datetime.strptime(from_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    if to_date:
+        try:
+            filter_to = datetime.strptime(to_date, "%Y-%m-%d").replace(
+                hour=23, minute=59, second=59, tzinfo=timezone.utc
+            )
+        except ValueError:
+            pass
 
     for c in calls:
         agent_ext = c.get("agent_id")
@@ -52,6 +92,21 @@ async def list_calls(
             continue
         if accessible_agents is not None and agent_str not in accessible_agents:
             continue
+
+        # Date filtering
+        if filter_from or filter_to:
+            start_str = c.get("start_time")
+            if start_str:
+                try:
+                    start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                    if start_dt.tzinfo is None:
+                        start_dt = start_dt.replace(tzinfo=timezone.utc)
+                    if filter_from and start_dt < filter_from:
+                        continue
+                    if filter_to and start_dt > filter_to:
+                        continue
+                except (ValueError, AttributeError):
+                    pass
 
         results.append({
             "id": str(c.get("id", "")),
@@ -95,11 +150,13 @@ async def list_calls_rich(
         if accessible_agents is not None and agent_str not in accessible_agents:
             continue
 
-        # Transform to frontend expected format
+        # Bug #2: dynamic agent name
+        agent_name = await get_agent_name(agent_str)
+
         results.append({
             "id": str(c.get("id", "")),
             "external_id": str(c.get("id", "")),
-            "agent_name": "Agent de coiffure",
+            "agent_name": agent_name,
             "caller_number": c.get("from_number") or "",
             "caller_name": None,
             "direction": c.get("direction", "inbound"),
@@ -141,11 +198,13 @@ async def get_call(
             detail="Vous n'avez pas accès à cet appel"
         )
     
-    # Return in frontend format
+    # Bug #2: dynamic agent name
+    agent_name = await get_agent_name(agent_id)
+    
     return {
         "id": str(call.get("id", call_id)),
         "external_id": str(call.get("id", call_id)),
-        "agent_name": "Agent de coiffure",
+        "agent_name": agent_name,
         "caller_number": call.get("from_number") or "",
         "caller_name": None,
         "direction": call.get("direction", "inbound"),

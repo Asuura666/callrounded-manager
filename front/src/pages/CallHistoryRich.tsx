@@ -45,82 +45,6 @@ interface Filters {
   agent: string;
 }
 
-const MOCK_CALLS: CallRecord[] = [
-  {
-    id: "1",
-    external_id: "call_abc123",
-    agent_name: "Réceptionniste Élégance",
-    caller_number: "+33612345678",
-    caller_name: "Marie Dupont",
-    direction: "inbound",
-    status: "completed",
-    duration_seconds: 185,
-    started_at: "2026-02-13T09:30:00Z",
-    ended_at: "2026-02-13T09:33:05Z",
-    outcome: "RDV pris",
-    sentiment: "positive",
-    summary: "Cliente fidèle souhaitant un RDV pour une coloration. RDV confirmé pour vendredi 14h.",
-    tags: ["rdv", "coloration", "fidèle"],
-    transcript: [
-      { speaker: "agent", text: "Bonjour et bienvenue chez Élégance ! Je suis votre assistante virtuelle. Comment puis-je vous aider ?", timestamp: 0 },
-      { speaker: "caller", text: "Bonjour, je voudrais prendre rendez-vous pour une coloration s'il vous plaît.", timestamp: 5 },
-      { speaker: "agent", text: "Bien sûr ! Avez-vous une préférence de date et d'heure ?", timestamp: 12 },
-      { speaker: "caller", text: "Vendredi après-midi si possible.", timestamp: 18 },
-      { speaker: "agent", text: "J'ai un créneau disponible vendredi à 14h. Est-ce que cela vous convient ?", timestamp: 24 },
-      { speaker: "caller", text: "Parfait, c'est noté !", timestamp: 32 },
-      { speaker: "agent", text: "Excellent ! Puis-je avoir votre nom pour la réservation ?", timestamp: 38 },
-      { speaker: "caller", text: "Marie Dupont.", timestamp: 44 },
-      { speaker: "agent", text: "Merci Madame Dupont. Votre rendez-vous est confirmé pour vendredi à 14h. À bientôt !", timestamp: 50 },
-    ],
-  },
-  {
-    id: "2",
-    external_id: "call_def456",
-    agent_name: "Réceptionniste Élégance",
-    caller_number: "+33698765432",
-    direction: "inbound",
-    status: "completed",
-    duration_seconds: 95,
-    started_at: "2026-02-13T10:15:00Z",
-    ended_at: "2026-02-13T10:16:35Z",
-    outcome: "Information",
-    sentiment: "neutral",
-    summary: "Demande de renseignements sur les tarifs de coupe homme.",
-    tags: ["tarifs", "coupe homme"],
-    transcript: [
-      { speaker: "agent", text: "Bonjour et bienvenue chez Élégance ! Comment puis-je vous aider ?", timestamp: 0 },
-      { speaker: "caller", text: "Bonjour, c'est combien pour une coupe homme ?", timestamp: 4 },
-      { speaker: "agent", text: "Notre coupe homme est à 25€ et comprend le shampoing. Souhaitez-vous prendre rendez-vous ?", timestamp: 10 },
-      { speaker: "caller", text: "Non merci, je voulais juste le prix. Au revoir.", timestamp: 18 },
-      { speaker: "agent", text: "Je vous en prie, bonne journée !", timestamp: 24 },
-    ],
-  },
-  {
-    id: "3",
-    external_id: "call_ghi789",
-    agent_name: "Réceptionniste Élégance",
-    caller_number: "+33611223344",
-    caller_name: "Jean Martin",
-    direction: "inbound",
-    status: "completed",
-    duration_seconds: 210,
-    started_at: "2026-02-13T11:00:00Z",
-    ended_at: "2026-02-13T11:03:30Z",
-    outcome: "Annulation",
-    sentiment: "negative",
-    summary: "Client mécontent annulant son RDV en raison d'un retard la dernière fois.",
-    tags: ["annulation", "réclamation"],
-    transcript: [
-      { speaker: "agent", text: "Bonjour et bienvenue chez Élégance !", timestamp: 0 },
-      { speaker: "caller", text: "Bonjour, je veux annuler mon rendez-vous de demain.", timestamp: 4 },
-      { speaker: "agent", text: "Je suis désolée de l'apprendre. Puis-je vous demander la raison ?", timestamp: 10 },
-      { speaker: "caller", text: "La dernière fois j'ai attendu 30 minutes, c'est pas acceptable.", timestamp: 16 },
-      { speaker: "agent", text: "Je comprends votre frustration et je suis vraiment désolée pour ce désagrément. Souhaitez-vous que je transmette votre retour à la direction ?", timestamp: 24 },
-      { speaker: "caller", text: "Oui, faites ça. Au revoir.", timestamp: 35 },
-    ],
-  },
-];
-
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -198,7 +122,6 @@ export function CallHistoryRich() {
       const data = await api.get<{ calls: CallRecord[] }>("/calls/rich");
       setCalls(data.calls || []);
     } catch (error) {
-      console.log("[CallHistory] Using mock data");
       setCalls([]);
     } finally {
       setLoading(false);

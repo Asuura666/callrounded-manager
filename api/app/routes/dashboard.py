@@ -1,15 +1,14 @@
 """
 CallRounded Manager - Dashboard Routes
 🐺 Updated by Kuro - Added role-based filtering
+🦊 Updated by Shiro - Fix total_agents (Bug #3)
 """
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Query
-from sqlalchemy import select
 
 from ..deps import AccessibleAgentIds, CurrentUser, DBSession, TenantId
-from ..models import AgentCache
 from ..services import callrounded as cr
 
 router = APIRouter()
@@ -113,18 +112,19 @@ async def dashboard_stats(
     avg_duration = round(total_duration / duration_count, 1) if duration_count > 0 else 0.0
     response_rate = round((completed_calls / total_calls * 100), 1) if total_calls > 0 else 0.0
 
-    # Count agents
+    # Count agents — Bug #3: use API instead of empty AgentCache table
     if accessible_agents is not None:
         total_agents = len(accessible_agents)
         active_agents = len(seen_agents)
     else:
-        # Admin sees all agents
-        result = await db.execute(
-            select(AgentCache).where(AgentCache.tenant_id == tenant_id)
-        )
-        all_agents = result.scalars().all()
-        total_agents = len(all_agents)
-        active_agents = sum(1 for a in all_agents if a.status == "active")
+        # Admin sees all agents — fetch from CallRounded API directly
+        try:
+            all_api_agents = await cr.list_agents()
+            total_agents = len(all_api_agents)
+            active_agents = total_agents  # All listed agents are considered active
+        except Exception:
+            total_agents = len(seen_agents)
+            active_agents = len(seen_agents)
 
     return {
         "total_agents": total_agents,

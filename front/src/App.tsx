@@ -23,7 +23,6 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
   const { user } = useAuth();
   
   if (!(user?.role === "ADMIN" || user?.role === "TENANT_ADMIN" || user?.role === "SUPER_ADMIN")) {
-    console.log("[AdminRoute] Access denied for user:", user?.email, "role:", user?.role);
     return <Redirect to="/" />;
   }
   
@@ -61,7 +60,6 @@ export default function App() {
     );
   }
 
-  console.log("[App] User logged in:", user.email, "role:", user.role);
 
   return (
     <AppLayout user={user} onLogout={logout}>

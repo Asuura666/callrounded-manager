@@ -127,6 +127,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     fetchStats();
+    fetchCalls();
   }, [fromDate, toDate]);
 
   const statCards = [
