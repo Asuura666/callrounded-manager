@@ -1,19 +1,19 @@
 """
-Reports routes — Weekly report configuration
+CallRounded Manager - Reports Routes (Sprint 7)
+Weekly report configuration per tenant.
 """
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..auth import get_current_user
-from ..models import WeeklyReportConfig, User
+from ..deps import CurrentUser, DBSession, TenantId
+from ..models import WeeklyReportConfig
 
-router = APIRouter(prefix="/reports")
+router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
 # ============================================================================
@@ -30,14 +30,6 @@ class IncludeSchema(BaseModel):
     alerts: bool = True
     recommendations: bool = False
 
-class ReportConfigResponse(BaseModel):
-    enabled: bool
-    recipients: list[str]
-    schedule: ScheduleSchema
-    include: IncludeSchema
-    last_sent: Optional[str] = None
-    next_scheduled: Optional[str] = None
-
 class ReportConfigUpdate(BaseModel):
     enabled: Optional[bool] = None
     recipients: Optional[list[str]] = None
@@ -49,7 +41,7 @@ class ReportConfigUpdate(BaseModel):
 # HELPERS
 # ============================================================================
 
-async def get_or_create_config(tenant_id, db: AsyncSession) -> "WeeklyReportConfig":
+async def get_or_create_config(tenant_id, db: AsyncSession) -> WeeklyReportConfig:
     result = await db.execute(
         select(WeeklyReportConfig).where(WeeklyReportConfig.tenant_id == tenant_id)
     )
@@ -62,7 +54,7 @@ async def get_or_create_config(tenant_id, db: AsyncSession) -> "WeeklyReportConf
     return config
 
 
-def config_to_response(config: "WeeklyReportConfig") -> dict:
+def config_to_response(config: WeeklyReportConfig) -> dict:
     recipients = [r.strip() for r in (config.recipients or "").split(",") if r.strip()]
     return {
         "enabled": config.enabled,
@@ -78,7 +70,7 @@ def config_to_response(config: "WeeklyReportConfig") -> dict:
             "recommendations": config.include_recommendations,
         },
         "last_sent": config.last_sent_at.isoformat() if config.last_sent_at else None,
-        "next_scheduled": None,  # Could compute from schedule
+        "next_scheduled": None,
     }
 
 
@@ -88,8 +80,8 @@ def config_to_response(config: "WeeklyReportConfig") -> dict:
 
 @router.get("/weekly/config")
 async def get_weekly_config(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ):
     config = await get_or_create_config(current_user.tenant_id, db)
     return config_to_response(config)
@@ -98,8 +90,8 @@ async def get_weekly_config(
 @router.patch("/weekly/config")
 async def update_weekly_config(
     update: ReportConfigUpdate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ):
     config = await get_or_create_config(current_user.tenant_id, db)
     
@@ -123,15 +115,14 @@ async def update_weekly_config(
 
 @router.post("/weekly/send-now")
 async def send_weekly_report_now(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser,
+    db: DBSession,
 ):
     config = await get_or_create_config(current_user.tenant_id, db)
     
     if not config.enabled:
         raise HTTPException(status_code=400, detail="Weekly reports are disabled")
     
-    # For now, mark as sent (actual email sending to be implemented)
     config.last_sent_at = datetime.utcnow()
     await db.commit()
     
