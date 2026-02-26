@@ -1,18 +1,18 @@
-# CallRounded Manager — Documentation Complète
+# CallRounded Manager — Documentation Technique
 
 > **Portail client SaaS pour gérer un réceptionniste téléphonique IA (CallRounded)**  
 > Développé par Shiro 🦊 & Kuro 🐺 pour W&I (Willyam BEGOT & Ilane)  
-> Branche : `Shiro/white_cart` | Repo : [Asuura666/callrounded-manager](https://github.com/Asuura666/callrounded-manager)
+> *Mise à jour : 26 février 2026*
 
 ---
 
 ## Table des matières
 
-1. [Contexte & Vision](#1-contexte--vision)
-2. [Architecture technique](#2-architecture-technique)
-3. [Stack technologique](#3-stack-technologique)
+1. [Vue d'ensemble](#1-vue-densemble)
+2. [Architecture](#2-architecture)
+3. [Stack technique](#3-stack-technique)
 4. [Modèles de données](#4-modèles-de-données)
-5. [API Backend — Routes détaillées](#5-api-backend--routes-détaillées)
+5. [API Backend — Routes](#5-api-backend--routes)
 6. [Frontend — Pages & Composants](#6-frontend--pages--composants)
 7. [Authentification & RBAC](#7-authentification--rbac)
 8. [Intégration API CallRounded](#8-intégration-api-callrounded)
@@ -24,24 +24,25 @@
 
 ---
 
-## 1. Contexte & Vision
+## 1. Vue d'ensemble
 
-### Le produit
-**CallRounded Manager** est un portail client SaaS permettant aux salons de coiffure (et autres commerces) de gérer leur **réceptionniste téléphonique IA** fourni par l'API [CallRounded](https://callrounded.com).
+**CallRounded Manager** est un portail client SaaS permettant aux salons de coiffure de gérer leur **réceptionniste téléphonique IA** fourni par l'API [CallRounded](https://callrounded.com).
 
 ### Le problème
+
 Les salons de coiffure perdent des clients à cause d'appels manqués. Un réceptionniste IA répond 24/7, prend les RDV, renseigne sur les tarifs et horaires. Mais il manquait un **portail client** pour :
-- Voir l'historique des appels et les transcriptions
+- Voir l'historique des appels et transcriptions
 - Configurer l'agent IA (personnalité, voix, prompts)
 - Gérer les alertes et rapports
 - Intégrer l'agenda Google Calendar
 
-### L'approche
-D�veloppement en **6 sprints** sur ~3 jours (12-19 février 2026), avec collaboration Shiro (frontend) + Kuro (backend). Carte blanche donnée par Ilane pour innover sur la rétention client.
+### Développement
+
+7 sprints sur ~3 semaines (5–26 février 2026). Collaboration Shiro (frontend/backend) + Kuro (backend/models).
 
 ---
 
-## 2. Architecture technique
+## 2. Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -58,284 +59,294 @@ D�veloppement en **6 sprints** sur ~3 jours (12-19 février 2026), avec collabor
 │    ┌────┴────┐                                   │
 │    │         │                                   │
 │    ▼         ▼                                   │
-│ front:3101  api:8201                             │
-│ (React SPA) (FastAPI)                            │
-│              │                                   │
-│         ┌────┴────┐                              │
-│         │         │                              │
-│         ▼         ▼                              │
-│     PostgreSQL  CallRounded API                  │
-│     (db:5432)   (api.callrounded.com)            │
+│  /api/*    /*                                    │
+│    │         │                                   │
+│    ▼         ▼                                   │
+│ ┌────────┐ ┌────────┐                            │
+│ │FastAPI │ │ React  │                            │
+│ │ :8201  │ │ :3101  │                            │
+│ └───┬────┘ └────────┘                            │
+│     │                                            │
+│     ▼                                            │
+│ ┌──────────┐   ┌────────────────────┐            │
+│ │PostgreSQL│   │ CallRounded API    │            │
+│ │  :5432   │   │ api.callrounded.com│            │
+│ └──────────┘   └────────────────────┘            │
 └─────────────────────────────────────────────────┘
 ```
 
-### Services Docker (docker-compose.preprod.yml)
-| Service | Image | Port interne | Port exposé |
-|---------|-------|-------------|-------------|
-| `db-preprod` | postgres:16-alpine | 5432 | — |
-| `api-preprod` | ./api (Dockerfile) | 8200 | 127.0.0.1:8201 |
-| `front-preprod` | ./front (Dockerfile) | 80 | 127.0.0.1:3101 |
-
 ---
 
-## 3. Stack technologique
+## 3. Stack technique
 
-### Backend
-| Technologie | Usage |
-|-------------|-------|
-| **Python 3.11** | Langage |
-| **FastAPI** | Framework API REST |
-| **SQLAlchemy 2.0** | ORM async (mapped_column) |
-| **PostgreSQL 16** | Base de données |
-| **Pydantic v2** | Validation / Schemas |
-| **pydantic-settings** | Configuration (.env) |
-| **passlib[bcrypt]** | Hash des mots de passe |
-| **python-jose** | JWT (access + refresh tokens) |
-| **httpx** | Client HTTP async (vers CallRounded API) |
-| **anthropic** | SDK Claude (Agent Builder LLM) |
+| Couche | Technologie |
+|--------|------------|
+| Backend | FastAPI + SQLAlchemy async + Alembic |
+| Frontend | React 18 + Vite + shadcn/ui + Tailwind CSS |
+| Base de données | PostgreSQL 16 (Alpine) |
+| Auth | JWT (access 15min + refresh 7j) + bcrypt |
+| API externe | CallRounded API v1 (httpx async) |
+| LLM | Anthropic Claude (Agent Builder) |
+| Déploiement | Docker Compose + nginx + Let's Encrypt |
 
-### Frontend
-| Technologie | Usage |
-|-------------|-------|
-| **React 18** | Framework UI |
-| **TypeScript** | Typage |
-| **Vite** | Build tool |
-| **Tailwind CSS** | Styles utilitaires |
-| **shadcn/ui** | Composants UI (Button, Card, Dialog, Table, etc.) |
-| **Lucide React** | Icônes |
-| **Recharts** | Graphiques (analytics) |
+### Métriques code
 
-### Charte graphique W&I
-| Élément | Valeur |
-|---------|--------|
-| Bleu nuit | `#0E2A47` |
-| Or | `#C9A24D` |
-| Blanc | `#FFFFFF` |
-| Noir | `#1A1A1A` |
-| Titres | Playfair Display |
-| Textes | Montserrat |
+| Zone | Fichiers | Lignes |
+|------|----------|--------|
+| Backend (routes + services + auth + models) | 18 | 4,418 |
+| Frontend (pages + composants + layout + App) | 18 | 5,223 |
+| **Total** | **36** | **9,641** |
 
 ---
 
 ## 4. Modèles de données
 
-### Schéma relationnel
+### 14 tables
 
-```
-tenants
-  ├── users (1:N)
-  │     └── user_agent_assignments (1:N)
-  ├── agents_cache (1:N)
-  ├── calls_cache (1:N)
-  ├── phone_numbers_cache (1:N)
-  ├── knowledge_bases_cache (1:N)
-  ├── agent_templates (1:N)
-  ├── weekly_reports (1:N)
-  ├── alert_rules (1:N)
-  │     └── alert_events (1:N)
-  └── calendar_integrations (1:1)
-```
+#### Core
 
-### Tables détaillées
+| Table | Description | Champs clés |
+|-------|------------|-------------|
+| `tenants` | Multi-tenant | `id`, `name` (unique), `plan` (free/pro/enterprise), `created_at` |
+| `users` | Utilisateurs avec rôles | `id`, `tenant_id` (FK), `email` (unique/tenant), `password_hash` (bcrypt), `role`, `is_active` |
+| `user_agent_assignments` | Accès agent par utilisateur | `user_id` (FK), `agent_external_id`, `assigned_by` |
 
-#### `tenants` — Multi-tenant
-- `id` (UUID), `name` (unique), `plan` (free/pro/enterprise), `created_at`
+**Rôles** : `SUPER_ADMIN`, `TENANT_ADMIN`, `USER`  
+**Méthodes User** : `is_admin()` → vérifie SUPER_ADMIN ou TENANT_ADMIN, `can_access_agent(id)`
 
-#### `users` — Utilisateurs avec rôles
-- `id`, `tenant_id` (FK), `email` (unique par tenant), `password_hash` (bcrypt), `role`, `is_active`
-- **Rôles** : `SUPER_ADMIN`, `TENANT_ADMIN`, `USER`
-- Méthodes : `is_admin()`, `can_access_agent(agent_id)`
+#### Cache (sync depuis CallRounded API)
 
-#### `user_agent_assignments` — Accès agent par utilisateur
-- Permet de restreindre la visibilité des agents pour les `USER` (les admins voient tout)
+| Table | Description |
+|-------|------------|
+| `agents_cache` | Cache local des agents (`external_id`, `name`, `status`, `description`) |
+| `calls_cache` | Cache des appels (`external_call_id`, `caller_number`, `duration`, `status`, `transcription`, `recording_url`, `started_at`, `ended_at`) |
+| `phone_numbers_cache` | Cache numéros (`number`, `status`, `agent_external_id`) |
+| `knowledge_bases_cache` | Cache KB (`name`, `description`, `source_count`) |
 
-#### `agents_cache` — Cache local des agents CallRounded
-- Synchro depuis l'API CallRounded, `external_id` = ID CallRounded
+#### Features
 
-#### `calls_cache` — Cache des appels
-- `external_call_id`, `caller_number`, `duration`, `status`, `transcription`, `recording_url`, `started_at`, `ended_at`
-
-#### `agent_templates` — Templates de configuration
-- 6 presets intégrés (coiffure, restaurant, médecin, immobilier, garage, e-commerce)
-- Champs : `greeting`, `system_prompt`, `voice`, `language`, `category`, `icon`
-
-#### `alert_rules` + `alert_events` — Système d'alertes
-- Rules : `rule_type`, `conditions` (JSON), canaux (email, webhook)
-- Events : `severity`, `title`, `message`, acknowledged tracking
-
-#### `weekly_reports` — Rapports hebdo
-- Stats : `total_calls`, `completed_calls`, `missed_calls`, `avg_duration`, `total_cost`
-- Variation semaine précédente (`calls_change_pct`, etc.)
-
-#### `calendar_integrations` — Google Calendar
-- OAuth tokens (access/refresh), `calendar_id`, `last_sync`, `events_synced`
+| Table | Description |
+|-------|------------|
+| `agent_templates` | Templates de configuration (6 presets : coiffure, restaurant, médecin, immobilier, garage, e-commerce). Champs : `greeting`, `system_prompt`, `voice`, `language`, `category`, `icon`, `usage_count` |
+| `weekly_reports` | Rapports hebdo générés (`total_calls`, `completed_calls`, `missed_calls`, `avg_duration`, `total_cost`, variations %) |
+| `weekly_report_configs` | Config rapports par tenant (`enabled`, `recipients`, `schedule_day`, `schedule_time`, options include) |
+| `alert_rules` | Règles d'alertes (`rule_type`, `conditions` JSON, `notify_email`, `notify_webhook`, `cooldown_minutes`, `is_active`) |
+| `alert_events` | Historique alertes (`severity`, `title`, `message`, `acknowledged_at/by`) |
+| `calendar_integrations` | Google Calendar OAuth (`access_token`, `refresh_token`, `calendar_id`, `last_sync`, `events_synced`) |
 
 ---
 
-## 5. API Backend — Routes détaillées
+## 5. API Backend — Routes
 
-### Métriques
-- **46 routes API** au total
-- **4,071 lignes** de code backend (routes + services + auth + models)
-- **12 fichiers de routes**
+**Total : 55 routes** réparties sur **13 fichiers de routes**.
 
-### Auth (`/api/auth/`)
+### Auth (`/api/auth/`) — 4 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| POST | `/auth/login` | Login → access_token + refresh_token (JWT) |
-| POST | `/auth/refresh` | Rafraîchir le token |
-| GET | `/auth/me` | Profil utilisateur courant |
+| POST | `/login` | Login → cookies httpOnly (access_token + refresh_token) |
+| POST | `/logout` | Supprime les cookies |
+| GET | `/me` | Profil utilisateur courant |
+| POST | `/refresh` | Rafraîchir le token |
 
-### Dashboard (`/api/dashboard/`)
+### Dashboard (`/api/dashboard/`) — 1 route
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/dashboard/stats` | Stats résumées (agents, appels, durée) |
+| GET | `/stats` | Stats résumées (agents, appels, durée) via API CallRounded direct |
 
-### Agents (`/api/agents/`)
+### Agents (`/api/agents/`) — 3 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/agents/` | Liste des agents (depuis API CallRounded) |
-| GET | `/agents/{id}` | Détail d'un agent |
+| GET | `/` | Liste des agents (depuis API CallRounded) |
+| GET | `/{agent_id}` | Détail d'un agent |
+| PATCH | `/{agent_id}` | Modifier un agent |
 
-### Appels (`/api/calls/`)
+### Appels (`/api/calls/`) — 3 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/calls/` | Liste des appels (paginée, filtres) |
-| GET | `/calls/rich` | Appels enrichis (transcriptions transformées) |
-| GET | `/calls/{id}` | Détail d'un appel avec transcription |
+| GET | `/` | Liste des appels (paginée, filtres) |
+| GET | `/rich` | Appels enrichis (transcriptions transformées via `transform_transcript()`) |
+| GET | `/{call_id}` | Détail d'un appel avec transcription |
 
-> **Note** : Le endpoint `/calls/rich` a été créé le 19 fév pour résoudre le problème de format des transcriptions. L'API CallRounded retourne `{role, content}` mais le frontend attendait `{speaker, text, timestamp}`. La fonction `transform_transcript()` fait la conversion.
+> **Note** : `transform_transcript()` convertit le format CallRounded `{role, content}` → frontend `{speaker, text, timestamp}`.
 
-### Admin (`/api/admin/`)
+### Admin (`/api/admin/`) — 9 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/admin/users` | Liste users du tenant |
-| POST | `/admin/users` | Créer un user |
-| PATCH | `/admin/users/{id}` | Modifier un user (rôle, actif) |
-| DELETE | `/admin/users/{id}` | Supprimer un user |
-| GET | `/admin/users/{id}/agents` | Agents assignés à un user |
-| POST | `/admin/users/{id}/agents` | Assigner un agent à un user |
-| DELETE | `/admin/users/{id}/agents/{agent_id}` | Retirer un agent |
+| GET | `/users` | Liste users du tenant |
+| POST | `/users` | Créer un user |
+| GET | `/users/{id}` | Détail user |
+| PATCH | `/users/{id}` | Modifier un user (rôle, actif) |
+| DELETE | `/users/{id}` | Supprimer un user |
+| GET | `/users/{id}/agents` | Agents assignés à un user |
+| POST | `/users/{id}/agents` | Assigner un agent |
+| POST | `/users/{id}/agents/bulk` | Assigner plusieurs agents |
+| DELETE | `/users/{id}/agents/{agent_id}` | Retirer un agent |
+| GET | `/agents` | Liste tous les agents (admin) |
 
-### LLM Agent Builder (`/api/llm/`)
+### LLM Agent Builder (`/api/llm/`) — 2 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| POST | `/llm/chat` | Chat avec Claude pour configurer l'agent |
-| POST | `/llm/generate-prompt` | Générer un system prompt optimisé |
-| POST | `/llm/improve-greeting` | Améliorer le message d'accueil |
+| POST | `/chat` | Chat avec Claude pour configurer l'agent |
+| GET | `/voices` | Liste des voix disponibles |
 
-> **Pourquoi** : Permettre aux gérants de salon (non-techniques) de configurer leur agent IA via une conversation naturelle plutôt que d'écrire des prompts.
+> Nécessite `ANTHROPIC_API_KEY` configurée.
 
-### Templates (`/api/templates/`)
+### Templates (`/api/templates/`) — 9 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/templates/` | Liste templates (presets + custom) |
-| GET | `/templates/presets` | 6 templates préinstallés |
-| POST | `/templates/` | Créer un template custom |
-| GET | `/templates/{id}` | Détail template |
-| PUT | `/templates/{id}` | Modifier template |
-| DELETE | `/templates/{id}` | Supprimer template |
-| POST | `/templates/{id}/apply` | Appliquer un template à un agent |
+| GET | `/` | Liste templates (presets + custom) |
+| GET | `/presets` | 6 templates préinstallés |
+| GET | `/categories` | Catégories disponibles |
+| GET | `/{id}` | Détail template |
+| POST | `/` | Créer un template custom |
+| PATCH | `/{id}` | Modifier template |
+| DELETE | `/{id}` | Supprimer template |
+| POST | `/{id}/use` | Appliquer un template à un agent |
+| POST | `/seed-presets` | Seed les 6 presets en DB |
 
-### Analytics (`/api/analytics/`)
+### Analytics (`/api/analytics/`) — 4 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/analytics/overview` | Vue d'ensemble (appels, durée, taux) |
-| GET | `/analytics/calls/daily` | Appels par jour (graphique) |
-| GET | `/analytics/calls/hourly` | Heatmap horaire |
-| GET | `/analytics/performance` | Performance agents |
-| GET | `/analytics/trends` | Tendances semaine/mois |
+| GET | `/overview` | Vue d'ensemble (appels, durée, taux, top agents) |
+| GET | `/trends` | Tendances semaine/mois |
+| GET | `/weekly-reports` | Liste rapports hebdo générés |
+| GET | `/peak-hours` | Heures de pointe |
 
-### Alertes (`/api/alerts/`)
+### Alertes (`/api/alerts/`) — 10 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/alerts/rules` | Liste des règles |
-| POST | `/alerts/rules` | Créer une règle |
-| GET | `/alerts/rules/{id}` | Détail règle |
-| PUT | `/alerts/rules/{id}` | Modifier règle |
-| DELETE | `/alerts/rules/{id}` | Supprimer règle |
-| POST | `/alerts/rules/{id}/toggle` | Activer/désactiver |
-| GET | `/alerts/events` | Historique des alertes |
-| POST | `/alerts/events/{id}/acknowledge` | Acquitter une alerte |
-| GET | `/alerts/presets` | 4 presets (missed calls, duration, volume, errors) |
+| GET | `/rules` | Liste des règles |
+| GET | `/rules/presets` | 4 presets (missed calls, duration, volume, errors) |
+| POST | `/rules` | Créer une règle |
+| POST | `/rules/from-preset/{preset_id}` | Créer depuis un preset |
+| PATCH | `/rules/{rule_id}` | Modifier une règle |
+| DELETE | `/rules/{rule_id}` | Supprimer une règle |
+| GET | `/events` | Historique des alertes |
+| POST | `/events/{event_id}/acknowledge` | Acquitter une alerte |
+| POST | `/events/acknowledge-all` | Acquitter toutes les alertes |
+| GET | `/stats` | Statistiques alertes |
 
-### Rapports (`/api/reports/` via alerts)
+### Rapports (`/api/reports/`) — 3 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/alerts/reports/weekly` | Dernier rapport hebdo |
-| POST | `/alerts/reports/generate` | Générer un rapport |
+| GET | `/weekly/config` | Configuration rapport hebdo du tenant |
+| PATCH | `/weekly/config` | Modifier la config (jour, heure, destinataires, options) |
+| POST | `/weekly/send-now` | Envoyer le rapport immédiatement |
 
-### Google Calendar (`/api/calendar/`)
+### Google Calendar (`/api/calendar/`) — 8 routes
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/calendar/status` | État de la connexion |
-| POST | `/calendar/connect` | Lancer OAuth Google |
-| POST | `/calendar/callback` | Callback OAuth |
-| DELETE | `/calendar/disconnect` | Déconnecter |
-| GET | `/calendar/events` | Liste des événements |
-| POST | `/calendar/events` | Créer un événement |
-| DELETE | `/calendar/events/{id}` | Supprimer événement |
-| GET | `/calendar/available-slots` | Créneaux disponibles |
-| POST | `/calendar/sync` | Forcer la synchro |
+| GET | `/connect` | Lancer OAuth Google |
+| GET | `/callback` | Callback OAuth |
+| GET | `/status` | État de la connexion |
+| POST | `/disconnect` | Déconnecter |
+| GET | `/events` | Liste des événements |
+| POST | `/events` | Créer un événement |
+| POST | `/sync` | Forcer la synchro |
+| GET | `/available-slots` | Créneaux disponibles |
+
+### Phone Numbers (`/api/phone-numbers/`) — 1 route
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/` | Numéros extraits depuis `to_number` des appels (API `/phone-numbers` non fonctionnelle) |
+
+### Knowledge Bases (`/api/knowledge-bases/`) — 1 route
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/` | Infos salon parsées depuis le `base_prompt` de l'agent (API `/knowledge-bases` 404) |
 
 ---
 
 ## 6. Frontend — Pages & Composants
 
-### Métriques
-- **14 pages** + **3 composants** + **1 layout**
-- **5,401 lignes** de code frontend (pages + composants + layout + App)
-- **9 composants shadcn/ui** (button, card, dialog, table, input, label, badge, skeleton, switch, etc.)
-
-### Pages
+### 13 pages
 
 | Page | Fichier | Lignes | Description |
 |------|---------|--------|-------------|
 | Login | `LoginPage.tsx` | 123 | Auth avec animations, background W&I |
-| Dashboard | `DashboardPage.tsx` | 349 | Stats, graphiques, activité récente |
+| Dashboard | `DashboardPage.tsx` | 353 | Stats, graphiques, activité récente |
 | Agents | `AgentsPage.tsx` | 138 | Liste des agents IA |
-| Agent Builder | `AgentBuilderPage.tsx` | 337 | Chat LLM pour configurer l'agent |
-| Appels (simple) | `CallsPage.tsx` | 210 | Historique basique |
-| Appels (enrichi) | `CallHistoryRich.tsx` | 518 | Historique avec filtres, export, transcriptions |
+| Agent Builder | `AgentBuilderPage.tsx` | 334 | Chat LLM pour configurer l'agent |
+| Appels (enrichi) | `CallHistoryRich.tsx` | 441 | Historique avec filtres, export, transcriptions |
 | Détail appel | `CallDetailPage.tsx` | 259 | Transcription complète, infos appel |
-| Analytics | `AnalyticsDashboard.tsx` | 410 | Graphiques, heatmap, tendances |
-| Alertes | `AlertsConfig.tsx` | 439 | CRUD règles, historique événements |
-| Rapports | `ReportSettings.tsx` | 455 | Config rapports hebdo, preview |
-| Calendrier | `CalendarIntegration.tsx` | 393 | OAuth Google, événements, slots |
-| Admin Users | `AdminUsersPage.tsx` | 384 | CRUD utilisateurs, rôles, assignments |
-| Numéros | `PhoneNumbersPage.tsx` | 61 | Liste numéros (limité par API) |
-| Knowledge Bases | `KnowledgeBasesPage.tsx` | 66 | Bases de connaissances (limité par API) |
+| Analytics | `AnalyticsDashboard.tsx` | 417 | Graphiques, tendances |
+| Alertes | `AlertsConfig.tsx` | 402 | CRUD règles, historique événements |
+| Rapports | `ReportSettings.tsx` | 454 | Config rapports hebdo, preview |
+| Calendrier | `CalendarIntegration.tsx` | 343 | OAuth Google, événements, slots |
+| Admin Users | `AdminUsersPage.tsx` | 380 | CRUD utilisateurs, rôles, assignments |
+| Numéros | `PhoneNumbersPage.tsx` | 115 | Liste numéros (extraits des appels) |
+| Knowledge Bases | `KnowledgeBasesPage.tsx` | 214 | Infos salon (parsées depuis base_prompt) |
 
-### Composants réutilisables
+### 3 composants réutilisables
 
 | Composant | Lignes | Description |
 |-----------|--------|-------------|
 | `AgentTemplates.tsx` | 363 | Sélecteur de templates avec preview |
 | `CalendarWidget.tsx` | 299 | Widget calendrier pour le dashboard |
-| `NotificationCenter.tsx` | 313 | Centre de notifications (WebSocket ready) |
+| `NotificationCenter.tsx` | 307 | Centre de notifications (WebSocket ready) |
 
-### UX & Animations
+### Layout
+
+| Fichier | Lignes | Description |
+|---------|--------|-------------|
+| `AppLayout.tsx` | 182 | Sidebar + nav + responsive |
+
+### Routes frontend (`App.tsx`)
+
+```
+/                → DashboardPage
+/analytics       → AnalyticsDashboard
+/agents          → AgentsPage
+/calls           → CallHistoryRich
+/calls/:id       → CallDetailPage
+/alerts          → AlertsConfig
+/reports         → ReportSettings
+/calendar        → CalendarIntegration
+/phone-numbers   → PhoneNumbersPage
+/knowledge-bases → KnowledgeBasesPage
+/admin/users     → AdminUsersPage (admin only)
+/admin/agent-builder → AgentBuilderPage (admin only)
+```
+
+### UX & Design
+
+- **Charte W&I** : bleu nuit `#0E2A47`, or `#C9A24D`, blanc, noir
+- **Typographies** : Playfair Display (titres) + Montserrat (textes)
 - **Animations CSS** : fade-in, slide-up, scale-in, float, shimmer, pulse-gold
 - **Composants loading** : Skeleton, LoadingSpinner, CircularProgress
-- **Login** : background animé avec éléments flottants aux couleurs W&I
 - **Responsive** : adapté mobile/tablette
-- **Charte W&I** : bleu nuit, or, typographies Playfair Display + Montserrat
+- **shadcn/ui** : button, card, dialog, table, input, label, badge, skeleton, switch
 
 ---
 
 ## 7. Authentification & RBAC
 
-### Flow d'authentification
+### Flow
+
 ```
 1. POST /auth/login (email + password)
 2. Backend vérifie bcrypt hash
-3. Retourne access_token (15min) + refresh_token (7j)
-4. Frontend stocke les tokens
-5. Chaque requête envoie Authorization: Bearer <access_token>
-6. Si expiré → POST /auth/refresh avec le refresh_token
+3. Set cookies httpOnly : access_token (15min) + refresh_token (7j)
+   → secure=True, samesite=lax
+4. Chaque requête envoie les cookies automatiquement
+5. Si expiré → POST /auth/refresh
 ```
 
 ### Rôles
+
 | Rôle | Permissions |
 |------|------------|
 | `SUPER_ADMIN` | Tout (multi-tenant, futur) |
@@ -343,152 +354,120 @@ tenants
 | `USER` | Voir uniquement les agents assignés, pas d'accès admin |
 
 ### ⚠️ Point critique : bcrypt only
-Le backend utilise `passlib` avec `CryptContext(schemes=["bcrypt"])`. Les hashes argon2id causent une `UnknownHashError`. C'est un bug historique corrigé le 16 février (ghost user avec mauvais hash).
+
+Le backend utilise `passlib` avec `CryptContext(schemes=["bcrypt"])`. Les hashes argon2id causent une `UnknownHashError`. Bug historique corrigé le 16 février (ghost user avec mauvais hash).
+
+### AdminRoute (frontend)
+
+Le composant `AdminRoute` vérifie `user.role` parmi `ADMIN`, `TENANT_ADMIN`, `SUPER_ADMIN` avant d'afficher les pages admin.
 
 ---
 
 ## 8. Intégration API CallRounded
 
-### Service (`api/app/services/callrounded.py`)
+### Service (`api/app/services/callrounded.py` — 171 lignes)
+
 Client HTTP async (`httpx`) qui proxy les appels vers `https://api.callrounded.com/v1`.
 
 ### Endpoints fonctionnels ✅
-| Endpoint API | Usage | Status |
-|-------------|-------|--------|
-| `GET /calls` | Historique des appels | ✅ Fonctionne (21 appels visibles) |
-| `GET /agents/{id}` | Détail agent | ✅ Fonctionne |
+
+| Endpoint API | Usage |
+|-------------|-------|
+| `GET /calls` | Historique des appels (22 appels visibles) |
+| `GET /agents/{id}` | Détail agent |
 
 ### Endpoints non-fonctionnels ⚠️
-| Endpoint API | Problème | Status |
-|-------------|----------|--------|
-| `GET /phone-numbers` | Retourne "Welcome" (vide) | ❌ Permissions API ? |
-| `GET /knowledge-bases` | 404 Not Found | ❌ Endpoint inexistant ? |
 
-> **À investiguer** : Contacter le support CallRounded pour vérifier les permissions de la clé API.
+| Endpoint API | Problème |
+|-------------|----------|
+| `GET /phone-numbers` | Retourne "Welcome" (vide) |
+| `GET /knowledge-bases` | 404 Not Found |
 
-### Transformation des transcriptions
-L'API CallRounded retourne les transcriptions au format :
-```json
-[{"role": "assistant", "content": "Bonjour..."}, {"role": "user", "content": "Je voudrais..."}]
-```
+> **Contourné** : Phone numbers extraits depuis `to_number` des appels. KB parsée depuis `base_prompt` de l'agent.
 
-Le frontend attend :
-```json
-[{"speaker": "AI", "text": "Bonjour...", "timestamp": "00:00"}, {"speaker": "Client", "text": "Je voudrais...", "timestamp": "00:15"}]
-```
+### Agent configuré
 
-La fonction `transform_transcript()` (dans `calls.py`) fait cette conversion côté backend.
+- **Agent ID** : `a77a1d9c-05ed-4c2f-b00f-3194df10793f`
+- **Nom** : Agent de coiffure v2
 
 ---
 
 ## 9. Déploiement
 
 ### Preprod
-- **URL** : https://callrounded-preprod.apps.ilanewep.cloud
-- **Admin** : `admin@wi-agency.fr` / `Admin2026!` (rôle: `TENANT_ADMIN`)
-- **SSL** : Let's Encrypt (expire 2026-05-14)
-- **VPS** : `/home/debian/callrounded-manager/`
+
+| Élément | Valeur |
+|---------|--------|
+| URL | https://callrounded-preprod.apps.ilanewep.cloud |
+| Admin | `admin@wi-agency.fr` / `Admin2026!` (TENANT_ADMIN) |
+| SSL | Let's Encrypt |
+| VPS path | `/home/debian/callrounded-manager/` |
+
+### Docker Compose (`docker-compose.preprod.yml`)
+
+3 services :
+- **db-preprod** : PostgreSQL 16 Alpine (volume `pgdata_preprod`)
+- **api-preprod** : FastAPI (port `127.0.0.1:8201` → 8200)
+- **front-preprod** : React/Vite (port `127.0.0.1:3101` → 80)
+
+### nginx
+
+```
+/etc/nginx/sites-available/callrounded-preprod.conf
+```
+- `/api/` → `proxy_pass http://127.0.0.1:8201`
+- `/` → `proxy_pass http://127.0.0.1:3101`
+
+### Variables d'environnement
+
+```env
+DATABASE_URL=postgresql+asyncpg://callrounded:<password>@db-preprod:5432/callrounded_preprod
+JWT_SECRET=<secret>
+CALLROUNDED_API_URL=https://api.callrounded.com/v1
+CALLROUNDED_API_KEY=<key>
+CALLROUNDED_AGENT_ID=a77a1d9c-05ed-4c2f-b00f-3194df10793f
+ANTHROPIC_API_KEY=<key>
+FRONTEND_URL=https://callrounded-preprod.apps.ilanewep.cloud
+```
 
 ### Commandes utiles
+
 ```bash
 # Démarrer
 cd /home/debian/callrounded-manager
 docker compose -f docker-compose.preprod.yml up -d
 
-# Voir les logs
+# Logs
 docker compose -f docker-compose.preprod.yml logs -f api-preprod
 
-# Redémarrer l'API
+# Restart API
 docker compose -f docker-compose.preprod.yml restart api-preprod
 
 # Seed admin
 docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 ```
 
-### Variables d'environnement (`.env`)
-```env
-POSTGRES_PASSWORD=...
-JWT_SECRET=...
-CALLROUNDED_API_URL=https://api.callrounded.com/v1
-CALLROUNDED_API_KEY=...
-CALLROUNDED_AGENT_ID=a77a1d9c-05ed-4c2f-b00f-3194df10793f
-ANTHROPIC_API_KEY=...
-FRONTEND_URL=https://callrounded-preprod.apps.ilanewep.cloud
-```
-
-### Config nginx
-```
-/etc/nginx/sites-available/callrounded-preprod.conf
-```
-Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
-
 ---
 
 ## 10. Historique des sprints
 
-### Sprint 0 — POC & Foundation (5-6 fév)
-- Bootstrap projet (FastAPI + React + PostgreSQL)
-- Adaptation au contexte salon de coiffure
-- Intégration API CallRounded (agents, calls)
-- Restyling charte graphique W&I
-- **Commit** : `d0b7635` → `e05fbb3`
+| Sprint | Dates | Contenu |
+|--------|-------|---------|
+| **0** — Foundation | 5-6 fév | Bootstrap FastAPI + React + PostgreSQL, intégration API CallRounded, charte W&I |
+| **1** — UX | 6 fév | Animations CSS, skeleton loaders, login animé |
+| **2** — Admin | 12 fév | RBAC multi-utilisateurs, LLM Agent Builder, tests unitaires |
+| **3** — Templates & Analytics | 12-13 fév | 6 templates sectoriels, dashboard analytics |
+| **4** — Alertes & Rapports | 13 fév | Règles d'alertes (4 presets), rapports hebdo |
+| **5** — Notifications & Calendar | 13 fév | Centre de notifications, Google Calendar OAuth |
+| **6** — Calendar UI | 13 fév | Interface calendrier complète, CalendarWidget |
+| **7** — Bugfix & Cleanup | 23-26 fév | 7 bugs corrigés, Reports API, nettoyage console.log/dead code/mocks, merge → main |
 
-### Sprint 1 — UX & Animations (6 fév)
-- Animations CSS (fade-in, slide-up, shimmer, pulse-gold)
-- Skeleton loaders, LoadingSpinner, CircularProgress
-- Login page avec background animé
-- **Commit** : `e05fbb3`
+### Hotfixes
 
-### Sprint 2 — Admin & Agent Builder (12 fév)
-- Système admin multi-utilisateurs avec RBAC
-- LLM Agent Builder (chat avec Claude)
-- Tests unitaires admin
-- **Commits** : `ae78fc4` → `ea82ea6`
-
-### Sprint 3 — Templates & Analytics (12-13 fév)
-- 6 templates d'agents par secteur
-- Dashboard analytics (graphiques Recharts, heatmap)
-- **Commit** : `98e6ba3`
-
-### Sprint 4 — Alertes & Rapports (13 fév)
-- Système d'alertes (rules, events, 4 presets)
-- Rapports hebdomadaires (config, preview, génération)
-- **Commits** : `c18a318` → `535b100`
-
-### Sprint 5 — Notifications & Calendar (13 fév)
-- Centre de notifications (WebSocket ready)
-- Google Calendar OAuth + événements + créneaux
-- **Commits** : `a47e326` → `e8e8a4e`
-
-### Sprint 6 — Calendar UI & Polish (13 fév)
-- Interface calendrier complète
-- CalendarWidget pour le dashboard
-- **Commits** : `90b405e` → `6866286`
-
-### Sprint 7 — Bugfix + Reports + Cleanup (23-26 fév)
-- **7 bugs corrigés** : analytics endpoint, agent_name cache, dashboard total_agents, date filters, dead MOCK_CALLS, console.log, phone numbers page
-- **KB page dynamique** : parsing du base_prompt de l agent pour extraire adresse, équipe, personnalité
-- **Reports API** : modèle WeeklyReportConfig + 3 endpoints (GET/PATCH/POST /reports/weekly/config)
-- **Nettoyage** : suppression 16 console.log, dead code CallsPage.tsx, mock fallbacks Calendar/Alerts
-- **Seed mis à jour** : admin@wi-agency.fr / Admin2026!, tenant "W&I Agency"
-- **Merge** : Shiro/white_cart → main (fast-forward)
-- **Ajout** : api/.env.example
-- **Commits** : d0470d2 → edcffce
-
-### Hotfixes post-livraison
-
-#### 16 fév — Login fix
-- **Problème** : `UnknownHashError` à la connexion
-- **Cause** : Ghost user `admin@callrounded.local` avec hash argon2id, incompatible avec le backend bcrypt
-- **Fix** : Suppression du ghost user via SQL
-
-#### 19 fév — Session intensive
-- Nouvelle clé API CallRounded configurée
-- Fix `CALLROUNDED_AGENT_ID` manquant dans docker-compose.preprod
-- Endpoint `/calls/rich` pour transcriptions transformées
-- Fix RBAC : `is_admin()` vérifie `SUPER_ADMIN` ou `TENANT_ADMIN` (pas `ADMIN`)
-- Fix routes admin frontend (check élargi dans `AppLayout.tsx` et `App.tsx`)
-- **Résultat** : 21 appels réels visibles, agent visible dans l'interface ✅
+| Date | Fix |
+|------|-----|
+| 16 fév | Ghost user argon2id → supprimé, confirmé bcrypt only |
+| 19 fév | Clé API, AGENT_ID, `/calls/rich`, fix RBAC `is_admin()`, fix routes admin frontend |
 
 ---
 
@@ -499,19 +478,18 @@ Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
 | Login `UnknownHashError` | Ghost user avec hash argon2id | Supprimé ghost user, confirmé bcrypt only | 16 fév |
 | Page agents vide | `CALLROUNDED_AGENT_ID` manquant | Ajouté dans docker-compose.preprod.yml | 19 fév |
 | Historique appels vide | Pas d'endpoint enrichi | Créé `/calls/rich` + `transform_transcript()` | 19 fév |
-| Routes admin 403 | `is_admin()` ne reconnaissait pas `TENANT_ADMIN` | Fix check : `SUPER_ADMIN` ou `TENANT_ADMIN` | 19 fév |
+| Routes admin 403 | `is_admin()` ne reconnaissait pas `TENANT_ADMIN` | Fix check : SUPER_ADMIN ou TENANT_ADMIN | 19 fév |
 | Frontend admin non visible | AppLayout check trop strict | Élargi check dans AppLayout.tsx et App.tsx | 19 fév |
-| TypeScript errors AdminUsersPage | Types manquants | Fix types + imports | 12 fév |
-| Analytics page 500 | Frontend appelait /analytics/calls au lieu de /analytics/overview | Aligné endpoint + field names | 23 fév |
-| agent_name hardcodé | Nom agent statique dans les calls | Ajouté get_agent_name() avec cache 5min | 23 fév |
-| Dashboard total_agents=0 | Utilisait AgentCache vide | Appel cr.list_agents() direct | 23 fév |
-| Dashboard sans filtres date | fetchCalls() ignorait les dates | Ajouté from_date/to_date params | 23 fév |
+| Analytics page 500 | Frontend appelait mauvais endpoint | Aligné sur `/analytics/overview` + field names | 23 fév |
+| agent_name hardcodé | Nom agent statique dans les calls | Ajouté `get_agent_name()` avec cache 5min | 23 fév |
+| Dashboard total_agents=0 | Utilisait AgentCache vide | Appel `cr.list_agents()` direct | 23 fév |
+| Dashboard sans filtres date | `fetchCalls()` ignorait les dates | Ajouté `from_date`/`to_date` params | 23 fév |
 | Dead code MOCK_CALLS | 120 lignes mock dans CallHistoryRich | Supprimé | 23 fév |
-| console.log restants | 19 console.log dans 9 fichiers | Supprimé (gardé console.error) | 23-26 fév |
-| Phone numbers vide | API /phone-numbers ne marche pas | Extraction depuis to_number des calls | 23 fév |
-| Reports endpoints manquants | Frontend appelait 3 routes inexistantes | Créé reports.py + modèle DB | 26 fév |
-| Mock fallbacks Calendar | Fausses données affichées si API fail | Fallback vers états vides | 26 fév |
-| Mock fallbacks Alerts | MOCK_RULES inutilisé | Supprimé la constante | 26 fév |
+| console.log restants | 16 console.log dans 6 fichiers | Supprimé (gardé console.error) | 26 fév |
+| Phone numbers vide | API `/phone-numbers` inutilisable | Extraction depuis `to_number` des calls | 23 fév |
+| Reports endpoints manquants | Frontend appelait 3 routes inexistantes | Créé `reports.py` + modèle `WeeklyReportConfig` | 26 fév |
+| Mock fallbacks Calendar | Fausses données si API fail | Fallback vers états vides | 26 fév |
+| Mock fallbacks Alerts | `MOCK_RULES` inutilisé | Supprimé la constante | 26 fév |
 | CallsPage.tsx dead code | Importé mais jamais routé | Supprimé fichier + import | 26 fév |
 
 ---
@@ -525,38 +503,37 @@ Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
 - → Contacter support CallRounded pour permissions
 
 ### Features partielles
-- **Google Calendar** : OAuth flow implémenté mais pas testé en production (nécessite Google Cloud Console credentials)
-- **Notifications WebSocket** : Frontend prêt, backend WebSocket non implémenté (notifications via polling)
-- **SMS/WhatsApp** : Exclu volontairement (nécessiterait Twilio)
-- **Agent Builder LLM** : Fonctionnel si `ANTHROPIC_API_KEY` configurée
+- **Google Calendar** : OAuth implémenté mais pas testé en production (nécessite Google Cloud Console credentials)
+- **Notifications WebSocket** : Frontend prêt, backend WebSocket non implémenté (polling)
+- **LLM Agent Builder** : Fonctionnel si `ANTHROPIC_API_KEY` configurée
+- **SMS/WhatsApp** : Exclu (nécessiterait Twilio)
 
 ### Sécurité
 - JWT secret en `.env` (pas de vault)
 - Pas de rate limiting API
-- CORS restreint au `FRONTEND_URL` uniquement
+- CORS restreint au `FRONTEND_URL`
 
 ---
 
 ## 13. Prochaines étapes
 
-### Court terme (Sprint 8 — prévu mercredi)
-0. **Tenant display_name** — champ configurable pour le nom du salon
-0. **Pagination /calls/rich** — backend page param + frontend boutons prev/next
-0. **Vérification sécurité preprod** — JWT_SECRET, API keys
-0. **Pipeline CI/CD** — GitHub Actions pour déploiement auto
-1. **Vérifier permissions API CallRounded** — phone-numbers et knowledge-bases
-2. **Tester Google Calendar OAuth** en preprod avec vrais credentials Google
-3. **WebSocket backend** — pour notifications temps réel
+### Court terme (Sprint 8)
+1. **Tenant `display_name`** — champ configurable pour le nom du salon
+2. **Pagination `/calls/rich`** — backend page param + frontend prev/next
+3. **Vérification sécurité preprod** — JWT_SECRET, API keys
+4. **Pipeline CI/CD** — GitHub Actions pour déploiement auto
+5. **Permissions API CallRounded** — phone-numbers et knowledge-bases
 
 ### Moyen terme
-4. **Multi-tenant complet** — plusieurs salons par instance
-5. **Facturation** — Stripe integration pour les plans (free/pro/enterprise)
-6. **Dashboard public** — page status pour les clients des salons
+6. **Google Calendar OAuth** en preprod avec vrais credentials
+7. **WebSocket backend** — notifications temps réel
+8. **Multi-tenant complet** — plusieurs salons par instance
+9. **Facturation** — Stripe (plans free/pro/enterprise)
 
 ### Long terme
-7. **App mobile** — React Native pour les gérants
-8. **Analytics IA** — résumés automatiques des tendances d'appels
-9. **Intégrations** — Booking platforms (Planity, Treatwell)
+10. **App mobile** — React Native pour les gérants
+11. **Analytics IA** — résumés automatiques des tendances
+12. **Intégrations** — Planity, Treatwell
 
 ---
 
@@ -568,56 +545,57 @@ callrounded-manager/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py              # FastAPI app + CORS + routing
-│   │   ├── config.py            # Settings (pydantic-settings, .env)
+│   │   ├── config.py            # Settings (pydantic-settings)
 │   │   ├── database.py          # AsyncSession SQLAlchemy
-│   │   ├── models.py            # 12 tables (~320 lignes)
+│   │   ├── models.py            # 14 tables (320 lignes)
 │   │   ├── schemas.py           # Pydantic schemas (88 lignes)
-│   │   ├── auth.py              # JWT decode + get_current_user
+│   │   ├── auth.py              # JWT decode + get_current_user (45 lignes)
 │   │   ├── deps.py              # Dépendances FastAPI
 │   │   ├── seed.py              # Seed admin user
 │   │   ├── routes/
-│   │   │   ├── __init__.py      # Router aggregation (13 routers)
-│   │   │   ├── auth.py          # Login, refresh, me
-│   │   │   ├── dashboard.py     # Stats
-│   │   │   ├── agents.py        # CRUD agents
-│   │   │   ├── calls.py         # Calls + rich + transcripts
-│   │   │   ├── admin.py         # User management (466 lignes)
-│   │   │   ├── llm.py           # Agent Builder chat (369 lignes)
-│   │   │   ├── templates.py     # Template CRUD (432 lignes)
-│   │   │   ├── analytics.py     # Graphiques et stats (413 lignes)
-│   │   │   ├── alerts.py        # Rules + events (512 lignes)
-│   │   │   ├── calendar.py      # Google Calendar (561 lignes)
-│   │   │   ├── phone_numbers.py # Extraction depuis calls
-│   │   │   ├── reports.py       # Weekly report config (Sprint 7)
-│   │   │   └── knowledge_bases.py # (limité)
+│   │   │   ├── __init__.py      # 13 routers (18 lignes)
+│   │   │   ├── auth.py          # 4 routes (73 lignes)
+│   │   │   ├── dashboard.py     # 1 route (140 lignes)
+│   │   │   ├── agents.py        # 3 routes (66 lignes)
+│   │   │   ├── calls.py         # 3 routes (224 lignes)
+│   │   │   ├── admin.py         # 10 routes (466 lignes)
+│   │   │   ├── llm.py           # 2 routes (369 lignes)
+│   │   │   ├── templates.py     # 9 routes (432 lignes)
+│   │   │   ├── analytics.py     # 4 routes (413 lignes)
+│   │   │   ├── alerts.py        # 10 routes (512 lignes)
+│   │   │   ├── calendar.py      # 8 routes (561 lignes)
+│   │   │   ├── reports.py       # 3 routes (129 lignes)
+│   │   │   ├── phone_numbers.py # 1 route (61 lignes)
+│   │   │   └── knowledge_bases.py # 1 route (103 lignes)
 │   │   └── services/
-│   │       ├── callrounded.py   # Client API CallRounded
-│   │       └── llm_service.py   # Service Claude/Anthropic
+│   │       ├── callrounded.py   # Client API CallRounded (171 lignes)
+│   │       └── llm_service.py   # Service Claude/Anthropic (227 lignes)
+│   ├── alembic/                 # Migrations DB
 │   ├── tests/
 │   │   ├── conftest.py
 │   │   ├── test_admin.py
 │   │   ├── test_agents.py
 │   │   └── test_calls.py
 │   ├── Dockerfile
-│   ├── .env.example             # Variables d environnement
+│   ├── .env.example
 │   └── requirements.txt
 ├── front/
 │   ├── src/
 │   │   ├── main.tsx
-│   │   ├── App.tsx              # Routes React (102 lignes)
+│   │   ├── App.tsx              # Routes (99 lignes)
 │   │   ├── layouts/
 │   │   │   └── AppLayout.tsx    # Sidebar + nav (182 lignes)
-│   │   ├── pages/               # 13 pages (~4,000 lignes)
+│   │   ├── pages/               # 13 pages (4,373 lignes)
 │   │   └── components/
-│   │       ├── AgentTemplates.tsx
-│   │       ├── CalendarWidget.tsx
-│   │       ├── NotificationCenter.tsx
+│   │       ├── AgentTemplates.tsx  # (363 lignes)
+│   │       ├── CalendarWidget.tsx  # (299 lignes)
+│   │       ├── NotificationCenter.tsx # (307 lignes)
 │   │       └── ui/              # shadcn/ui components
 │   ├── Dockerfile
-│   ├── .env.example             # Variables d environnement
 │   └── package.json
 ├── docs/
 │   ├── DOCUMENTATION.md         # ← Ce fichier
+│   ├── DOCUMENTATION_OLD.md     # Ancienne version (Sprint 6)
 │   ├── API_REFERENCE.md
 │   ├── PLAN.md
 │   ├── PROGRESS.md
@@ -628,5 +606,5 @@ callrounded-manager/
 
 ---
 
-*Documentation rédigée par Shiro 🦊 — Mise à jour 26 février 2026*  
-*Basée sur 35+ commits, 7 sprints, et 3 sessions de hotfix*
+*Documentation rédigée par Shiro 🦊 — 26 février 2026*  
+*Synchronisée avec le code source (commit `d802c3c`)*
