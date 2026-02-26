@@ -465,6 +465,16 @@ Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
 - CalendarWidget pour le dashboard
 - **Commits** : `90b405e` → `6866286`
 
+### Sprint 7 — Bugfix + Reports + Cleanup (23-26 fév)
+- **7 bugs corrigés** : analytics endpoint, agent_name cache, dashboard total_agents, date filters, dead MOCK_CALLS, console.log, phone numbers page
+- **KB page dynamique** : parsing du base_prompt de l agent pour extraire adresse, équipe, personnalité
+- **Reports API** : modèle WeeklyReportConfig + 3 endpoints (GET/PATCH/POST /reports/weekly/config)
+- **Nettoyage** : suppression 16 console.log, dead code CallsPage.tsx, mock fallbacks Calendar/Alerts
+- **Seed mis à jour** : admin@wi-agency.fr / Admin2026!, tenant "W&I Agency"
+- **Merge** : Shiro/white_cart → main (fast-forward)
+- **Ajout** : api/.env.example
+- **Commits** : d0470d2 → edcffce
+
 ### Hotfixes post-livraison
 
 #### 16 fév — Login fix
@@ -492,6 +502,17 @@ Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
 | Routes admin 403 | `is_admin()` ne reconnaissait pas `TENANT_ADMIN` | Fix check : `SUPER_ADMIN` ou `TENANT_ADMIN` | 19 fév |
 | Frontend admin non visible | AppLayout check trop strict | Élargi check dans AppLayout.tsx et App.tsx | 19 fév |
 | TypeScript errors AdminUsersPage | Types manquants | Fix types + imports | 12 fév |
+| Analytics page 500 | Frontend appelait /analytics/calls au lieu de /analytics/overview | Aligné endpoint + field names | 23 fév |
+| agent_name hardcodé | Nom agent statique dans les calls | Ajouté get_agent_name() avec cache 5min | 23 fév |
+| Dashboard total_agents=0 | Utilisait AgentCache vide | Appel cr.list_agents() direct | 23 fév |
+| Dashboard sans filtres date | fetchCalls() ignorait les dates | Ajouté from_date/to_date params | 23 fév |
+| Dead code MOCK_CALLS | 120 lignes mock dans CallHistoryRich | Supprimé | 23 fév |
+| console.log restants | 19 console.log dans 9 fichiers | Supprimé (gardé console.error) | 23-26 fév |
+| Phone numbers vide | API /phone-numbers ne marche pas | Extraction depuis to_number des calls | 23 fév |
+| Reports endpoints manquants | Frontend appelait 3 routes inexistantes | Créé reports.py + modèle DB | 26 fév |
+| Mock fallbacks Calendar | Fausses données affichées si API fail | Fallback vers états vides | 26 fév |
+| Mock fallbacks Alerts | MOCK_RULES inutilisé | Supprimé la constante | 26 fév |
+| CallsPage.tsx dead code | Importé mais jamais routé | Supprimé fichier + import | 26 fév |
 
 ---
 
@@ -518,7 +539,11 @@ Reverse proxy : `/api` → `localhost:8201`, `/` → `localhost:3101`
 
 ## 13. Prochaines étapes
 
-### Court terme
+### Court terme (Sprint 8 — prévu mercredi)
+0. **Tenant display_name** — champ configurable pour le nom du salon
+0. **Pagination /calls/rich** — backend page param + frontend boutons prev/next
+0. **Vérification sécurité preprod** — JWT_SECRET, API keys
+0. **Pipeline CI/CD** — GitHub Actions pour déploiement auto
 1. **Vérifier permissions API CallRounded** — phone-numbers et knowledge-bases
 2. **Tester Google Calendar OAuth** en preprod avec vrais credentials Google
 3. **WebSocket backend** — pour notifications temps réel
@@ -545,13 +570,13 @@ callrounded-manager/
 │   │   ├── main.py              # FastAPI app + CORS + routing
 │   │   ├── config.py            # Settings (pydantic-settings, .env)
 │   │   ├── database.py          # AsyncSession SQLAlchemy
-│   │   ├── models.py            # 11 tables (294 lignes)
+│   │   ├── models.py            # 12 tables (~320 lignes)
 │   │   ├── schemas.py           # Pydantic schemas (88 lignes)
 │   │   ├── auth.py              # JWT decode + get_current_user
 │   │   ├── deps.py              # Dépendances FastAPI
 │   │   ├── seed.py              # Seed admin user
 │   │   ├── routes/
-│   │   │   ├── __init__.py      # Router aggregation (12 routers)
+│   │   │   ├── __init__.py      # Router aggregation (13 routers)
 │   │   │   ├── auth.py          # Login, refresh, me
 │   │   │   ├── dashboard.py     # Stats
 │   │   │   ├── agents.py        # CRUD agents
@@ -562,7 +587,8 @@ callrounded-manager/
 │   │   │   ├── analytics.py     # Graphiques et stats (413 lignes)
 │   │   │   ├── alerts.py        # Rules + events (512 lignes)
 │   │   │   ├── calendar.py      # Google Calendar (561 lignes)
-│   │   │   ├── phone_numbers.py # (limité)
+│   │   │   ├── phone_numbers.py # Extraction depuis calls
+│   │   │   ├── reports.py       # Weekly report config (Sprint 7)
 │   │   │   └── knowledge_bases.py # (limité)
 │   │   └── services/
 │   │       ├── callrounded.py   # Client API CallRounded
@@ -573,6 +599,7 @@ callrounded-manager/
 │   │   ├── test_agents.py
 │   │   └── test_calls.py
 │   ├── Dockerfile
+│   ├── .env.example             # Variables d environnement
 │   └── requirements.txt
 ├── front/
 │   ├── src/
@@ -580,13 +607,14 @@ callrounded-manager/
 │   │   ├── App.tsx              # Routes React (102 lignes)
 │   │   ├── layouts/
 │   │   │   └── AppLayout.tsx    # Sidebar + nav (182 lignes)
-│   │   ├── pages/               # 14 pages (4,142 lignes)
+│   │   ├── pages/               # 13 pages (~4,000 lignes)
 │   │   └── components/
 │   │       ├── AgentTemplates.tsx
 │   │       ├── CalendarWidget.tsx
 │   │       ├── NotificationCenter.tsx
 │   │       └── ui/              # shadcn/ui components
 │   ├── Dockerfile
+│   ├── .env.example             # Variables d environnement
 │   └── package.json
 ├── docs/
 │   ├── DOCUMENTATION.md         # ← Ce fichier
@@ -600,5 +628,5 @@ callrounded-manager/
 
 ---
 
-*Documentation rédigée par Shiro 🦊 — 23 février 2026*  
-*Basée sur 27 commits, 6 sprints, et 2 sessions de hotfix*
+*Documentation rédigée par Shiro 🦊 — Mise à jour 26 février 2026*  
+*Basée sur 35+ commits, 7 sprints, et 3 sessions de hotfix*

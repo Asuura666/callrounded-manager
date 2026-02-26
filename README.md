@@ -1,6 +1,6 @@
 # CallRounded Manager
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-Proprietary-red)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-green)
 
@@ -157,6 +157,7 @@ Documentation Swagger disponible sur `/docs`.
 - [x] Phase 1 — Core (Auth, Users, Calls)
 - [x] Phase 2 — Analytics & Templates
 - [x] Phase 3 — Alerts & Reports
+- [x] Phase 4 — Sprint 7: Bugfix (7 bugs), Reports API, Cleanup, Merge
 - [x] Phase 4 — Google Calendar
 - [ ] Phase 5 — Tests avec données réelles
 - [ ] Phase 6 — Déploiement production
