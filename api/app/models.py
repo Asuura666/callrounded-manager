@@ -292,3 +292,29 @@ class CalendarIntegration(Base):
     
     connected_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ============================================================================
+# SPRINT 7 - WEEKLY REPORTS
+# ============================================================================
+
+class WeeklyReportConfig(Base):
+    """Weekly report configuration per tenant."""
+    __tablename__ = "weekly_report_configs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    recipients: Mapped[str | None] = mapped_column(Text, nullable=True)  # Comma-separated emails
+    
+    schedule_day: Mapped[str] = mapped_column(String(20), nullable=False, default="monday")
+    schedule_time: Mapped[str] = mapped_column(String(5), nullable=False, default="09:00")
+    
+    include_call_summary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    include_analytics: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    include_alerts: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    include_recommendations: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    
+    last_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

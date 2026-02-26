@@ -33,55 +33,6 @@ interface CalendarStats {
   sync_errors: number;
 }
 
-const MOCK_STATUS: CalendarStatus = {
-  connected: true,
-  email: "salon@gmail.com",
-  last_sync: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-  calendar_name: "Salon Élégance - RDV",
-};
-
-const MOCK_EVENTS: CalendarEvent[] = [
-  {
-    id: "1",
-    title: "Coupe + Brushing - Marie Dupont",
-    start: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 3).toISOString(),
-    source: "ai_booking",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    title: "Coloration - Sophie Martin",
-    start: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
-    location: "Poste 2",
-    source: "ai_booking",
-    status: "confirmed",
-  },
-  {
-    id: "3",
-    title: "Coupe homme - Jean Bernard",
-    start: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 25).toISOString(),
-    source: "google",
-    status: "confirmed",
-  },
-  {
-    id: "4",
-    title: "Brushing - Claire Petit",
-    start: new Date(Date.now() + 1000 * 60 * 60 * 26).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 27).toISOString(),
-    source: "ai_booking",
-    status: "tentative",
-  },
-];
-
-const MOCK_STATS: CalendarStats = {
-  total_events_week: 47,
-  ai_bookings: 32,
-  upcoming_today: 8,
-  sync_errors: 0,
-};
 
 export function CalendarIntegration() {
   const [status, setStatus] = useState<CalendarStatus | null>(null);
@@ -104,9 +55,9 @@ export function CalendarIntegration() {
         api.get<CalendarStats>("/calendar/stats").catch(() => null),
       ]);
       
-      setStatus(statusRes || MOCK_STATUS);
-      setEvents(eventsRes?.events || MOCK_EVENTS);
-      setStats(statsRes || MOCK_STATS);
+      setStatus(statusRes || null);
+      setEvents(eventsRes?.events || []);
+      setStats(statsRes || null);
     } catch (error) {
       setStatus(null);
       setEvents([]);

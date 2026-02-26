@@ -68,42 +68,6 @@ const ALERT_TYPES = [
   },
 ];
 
-const MOCK_RULES: AlertRule[] = [
-  {
-    id: "1",
-    name: "Appels manqués critique",
-    type: "missed_calls",
-    condition: { metric: "missed_calls_count", operator: "gte", value: 5, timeframe_minutes: 60 },
-    channels: ["email", "sms"],
-    recipients: ["admin@salon.com", "+33612345678"],
-    is_active: true,
-    created_at: "2026-02-01T10:00:00Z",
-    last_triggered: "2026-02-12T15:30:00Z",
-    trigger_count: 3,
-  },
-  {
-    id: "2",
-    name: "Sentiment client dégradé",
-    type: "negative_sentiment",
-    condition: { metric: "negative_sentiment_rate", operator: "gte", value: 25, timeframe_minutes: 120 },
-    channels: ["email"],
-    recipients: ["manager@salon.com"],
-    is_active: true,
-    created_at: "2026-02-05T14:00:00Z",
-    trigger_count: 1,
-  },
-  {
-    id: "3",
-    name: "Temps d'attente élevé",
-    type: "long_wait",
-    condition: { metric: "avg_wait_seconds", operator: "gte", value: 90, timeframe_minutes: 30 },
-    channels: ["push"],
-    recipients: [],
-    is_active: false,
-    created_at: "2026-02-10T09:00:00Z",
-    trigger_count: 0,
-  },
-];
 
 export function AlertsConfig() {
   const [rules, setRules] = useState<AlertRule[]>([]);
