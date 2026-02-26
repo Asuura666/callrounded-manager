@@ -1,8 +1,8 @@
 # CallRounded Manager
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![License](https://img.shields.io/badge/license-Proprietary-red)
-![Status](https://img.shields.io/badge/status-Production%20Ready-green)
+![Status](https://img.shields.io/badge/status-Preprod-orange)
 
 ## 🎯 Objectif
 
@@ -18,31 +18,35 @@
 ## ✨ Fonctionnalités
 
 ### Pour les Salons (Utilisateurs)
-- 📞 **Historique des appels** — Consultez tous les appels reçus avec transcriptions
-- 📊 **Analytics** — Statistiques d'appels, heures de pointe, tendances
-- 📚 **Base de connaissances** — Gérez les infos du salon (services, tarifs, horaires)
-- 🔔 **Alertes** — Notifications en cas d'appels manqués ou problèmes
-- 📅 **Intégration Google Calendar** — Sync des RDV avec l'agenda
-- 📧 **Rapports hebdomadaires** — Résumé automatique par email
+- 📞 **Historique des appels** — Consultez tous les appels reçus avec transcriptions enrichies
+- 📊 **Analytics** — Statistiques, heures de pointe, tendances, rapports hebdo
+- 📚 **Base de connaissances** — Infos du salon (services, tarifs, horaires) parsées depuis l'agent
+- 🔔 **Alertes** — 4 presets (appels manqués, durée, volume, erreurs) + règles custom
+- 📅 **Google Calendar** — OAuth, sync événements, créneaux disponibles
+- 📧 **Rapports hebdomadaires** — Config personnalisable (jour, heure, destinataires, contenu)
 
 ### Pour les Admins (W&I)
-- 👥 **Gestion utilisateurs** — CRUD complet avec rôles
-- 🤖 **Agent Builder** — Configurateur d'agent IA avec LLM
-- 📱 **Gestion numéros** — Attribution des numéros de téléphone
-- 📋 **Templates** — Modèles de configuration réutilisables
+- 👥 **Gestion utilisateurs** — CRUD complet avec RBAC (SUPER_ADMIN, TENANT_ADMIN, USER)
+- 🤖 **Agent Builder** — Chat LLM (Claude) pour configurer l'agent IA en langage naturel
+- 📋 **Templates** — 6 presets sectoriels (coiffure, restaurant, médecin, immobilier, garage, e-commerce)
+- 📱 **Numéros** — Extraction automatique depuis l'historique des appels
 
 ## 🛠️ Stack Technique
 
-### Backend
+### Backend (4,418 lignes)
+
 | Composant | Technologie |
 |-----------|-------------|
 | Framework | FastAPI (Python 3.11+) |
 | Base de données | PostgreSQL 16 |
 | ORM | SQLAlchemy 2.0 (async) |
-| Auth | JWT (python-jose) |
+| Auth | JWT (httpOnly cookies, bcrypt) |
 | Validation | Pydantic v2 |
+| API externe | CallRounded API v1 (httpx async) |
+| LLM | Anthropic Claude |
 
-### Frontend
+### Frontend (5,223 lignes)
+
 | Composant | Technologie |
 |-----------|-------------|
 | Framework | React 18 + Vite |
@@ -52,96 +56,136 @@
 | Charts | Recharts |
 
 ### Infrastructure
+
 | Composant | Technologie |
 |-----------|-------------|
 | Conteneurisation | Docker + Docker Compose |
-| Reverse Proxy | Traefik v3 |
-| SSL | Let's Encrypt (auto) |
-| Hébergement | OVH VPS |
+| Reverse Proxy | nginx |
+| SSL | Let's Encrypt |
+| Hébergement | OVH VPS (Debian) |
 
 ## 📁 Structure du Projet
 
 ```
 callrounded-manager/
-├── api/                    # Backend FastAPI
+├── api/                        # Backend FastAPI
 │   ├── app/
-│   │   ├── routes/         # Endpoints API
-│   │   ├── services/       # Logique métier
-│   │   ├── models.py       # Modèles SQLAlchemy
-│   │   ├── schemas.py      # Schémas Pydantic
-│   │   └── main.py         # Point d'entrée
-│   └── tests/              # Tests unitaires
-├── front/                  # Frontend React
+│   │   ├── main.py             # App + CORS + routing
+│   │   ├── config.py           # Settings (pydantic-settings)
+│   │   ├── database.py         # AsyncSession SQLAlchemy
+│   │   ├── models.py           # 14 tables (320 lignes)
+│   │   ├── schemas.py          # Pydantic schemas
+│   │   ├── auth.py             # JWT + get_current_user
+│   │   ├── deps.py             # Dépendances FastAPI
+│   │   ├── seed.py             # Seed admin
+│   │   ├── routes/             # 13 routers, 55 routes
+│   │   │   ├── auth.py         # Login, logout, refresh, me
+│   │   │   ├── dashboard.py    # Stats résumées
+│   │   │   ├── agents.py       # CRUD agents
+│   │   │   ├── calls.py        # Appels + /rich + transcriptions
+│   │   │   ├── admin.py        # Users CRUD + agent assignments
+│   │   │   ├── llm.py          # Chat LLM + voices
+│   │   │   ├── templates.py    # Templates CRUD + presets
+│   │   │   ├── analytics.py    # Overview, trends, peak-hours
+│   │   │   ├── alerts.py       # Rules + events + presets
+│   │   │   ├── calendar.py     # Google Calendar OAuth
+│   │   │   ├── reports.py      # Weekly report config
+│   │   │   ├── phone_numbers.py
+│   │   │   └── knowledge_bases.py
+│   │   └── services/
+│   │       ├── callrounded.py  # Client API CallRounded
+│   │       └── llm_service.py  # Service Anthropic Claude
+│   ├── alembic/                # Migrations DB
+│   ├── tests/                  # Tests unitaires
+│   ├── Dockerfile
+│   ├── .env.example
+│   └── requirements.txt
+├── front/                      # Frontend React
 │   ├── src/
-│   │   ├── components/     # Composants UI
-│   │   ├── pages/          # Pages de l'app
-│   │   ├── hooks/          # Custom hooks
-│   │   └── App.tsx         # Router principal
+│   │   ├── App.tsx             # Router (12 routes)
+│   │   ├── layouts/
+│   │   │   └── AppLayout.tsx   # Sidebar + nav responsive
+│   │   ├── pages/              # 13 pages
+│   │   └── components/
+│   │       ├── AgentTemplates.tsx
+│   │       ├── CalendarWidget.tsx
+│   │       ├── NotificationCenter.tsx
+│   │       └── ui/             # shadcn/ui
+│   ├── Dockerfile
 │   └── package.json
-├── docs/                   # Documentation
-├── docker-compose.yml      # Config Docker prod
-└── .env                    # Variables d'environnement
+├── docs/
+│   ├── DOCUMENTATION.md        # Doc technique complète
+│   ├── DOCUMENTATION_OLD.md    # Ancienne version (archive)
+│   ├── API_REFERENCE.md
+│   ├── PLAN.md
+│   ├── PROGRESS.md
+│   └── architecture-saas.md
+├── docker-compose.preprod.yml
+└── README.md
 ```
 
 ## 🚀 Installation
 
 ### Prérequis
 - Docker & Docker Compose
-- Accès API CallRounded
+- Clé API CallRounded
 
-### Configuration
+### Démarrage rapide
 
-1. **Cloner le repo**
 ```bash
+# Cloner
 git clone https://github.com/Asuura666/callrounded-manager.git
 cd callrounded-manager
+
+# Configurer
+cp api/.env.example api/.env
+# Éditer api/.env avec vos credentials
+
+# Lancer
+docker compose -f docker-compose.preprod.yml up -d
+
+# Seed admin
+docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 ```
 
-2. **Configurer les variables d'environnement**
-```bash
-cp .env.example .env
-# Éditer .env avec vos credentials
-```
+### Variables d'environnement
 
-3. **Lancer les services**
-```bash
-docker compose up -d
-```
+| Variable | Description | Requis |
+|----------|-------------|--------|
+| `POSTGRES_PASSWORD` | Mot de passe PostgreSQL | ✅ |
+| `JWT_SECRET` | Secret JWT pour les tokens | ✅ |
+| `CALLROUNDED_API_KEY` | Clé API CallRounded | ✅ |
+| `CALLROUNDED_AGENT_ID` | ID de l'agent vocal | ✅ |
+| `FRONTEND_URL` | URL du frontend (CORS) | ✅ |
+| `ANTHROPIC_API_KEY` | Clé API Anthropic (Agent Builder) | ⚡ |
+| `GOOGLE_CLIENT_ID` | OAuth Google (Calendar) | ⚡ |
+| `GOOGLE_CLIENT_SECRET` | OAuth Google (Calendar) | ⚡ |
 
-### Variables d'environnement requises
+✅ = requis | ⚡ = optionnel (feature-dependent)
 
-| Variable | Description |
-|----------|-------------|
-| `POSTGRES_PASSWORD` | Mot de passe PostgreSQL |
-| `CALLROUNDED_API_KEY` | Clé API CallRounded |
-| `CALLROUNDED_AGENT_ID` | ID de l'agent vocal |
-| `ANTHROPIC_API_KEY` | Clé API Anthropic (Agent Builder) |
-| `GOOGLE_CLIENT_ID` | OAuth Google (Calendar) |
-| `GOOGLE_CLIENT_SECRET` | OAuth Google (Calendar) |
+## 📊 API
 
-## 🔗 URLs
+**55 endpoints** organisés en 13 domaines :
 
-| Environnement | URL |
-|---------------|-----|
-| Preprod | https://callrounded-preprod.apps.ilanewep.cloud |
-| Production | https://callrounded.apps.ilanewep.cloud |
+| Domaine | Prefix | Routes | Description |
+|---------|--------|--------|-------------|
+| Auth | `/api/auth` | 4 | Login, logout, refresh, profil |
+| Dashboard | `/api/dashboard` | 1 | Stats résumées |
+| Agents | `/api/agents` | 3 | Liste, détail, modification |
+| Appels | `/api/calls` | 3 | Historique, enrichi, détail |
+| Admin | `/api/admin` | 10 | Users CRUD + agent assignments |
+| LLM | `/api/llm` | 2 | Chat agent builder + voices |
+| Templates | `/api/templates` | 9 | CRUD + presets + catégories |
+| Analytics | `/api/analytics` | 4 | Overview, trends, peak-hours, weekly |
+| Alertes | `/api/alerts` | 10 | Rules CRUD + events + presets |
+| Calendar | `/api/calendar` | 8 | OAuth, events, sync, slots |
+| Reports | `/api/reports` | 3 | Config hebdo + envoi |
+| Numéros | `/api/phone-numbers` | 1 | Extraction depuis appels |
+| KB | `/api/knowledge-bases` | 1 | Parsing base_prompt agent |
 
-## 📊 API Endpoints
+Swagger : `/docs` | ReDoc : `/redoc`
 
-Le backend expose **46+ endpoints** organisés par domaine :
-
-- `/api/auth/*` — Authentification (login, logout, refresh)
-- `/api/admin/*` — Gestion utilisateurs et agents
-- `/api/calls/*` — Historique des appels
-- `/api/agents/*` — Configuration des agents IA
-- `/api/analytics/*` — Statistiques et tendances
-- `/api/alerts/*` — Règles et événements d'alertes
-- `/api/calendar/*` — Intégration Google Calendar
-- `/api/templates/*` — Templates de configuration
-
-Documentation Swagger disponible sur `/docs`.
-
-## 🎨 Charte Graphique
+## 🎨 Charte Graphique W&I
 
 | Élément | Valeur |
 |---------|--------|
@@ -154,19 +198,27 @@ Documentation Swagger disponible sur `/docs`.
 
 ## 📝 Roadmap
 
-- [x] Phase 1 — Core (Auth, Users, Calls)
-- [x] Phase 2 — Analytics & Templates
-- [x] Phase 3 — Alerts & Reports
-- [x] Phase 4 — Sprint 7: Bugfix (7 bugs), Reports API, Cleanup, Merge
-- [x] Phase 4 — Google Calendar
-- [ ] Phase 5 — Tests avec données réelles
-- [ ] Phase 6 — Déploiement production
+- [x] Sprint 0-1 — Foundation + UX (5-6 fév)
+- [x] Sprint 2 — Admin RBAC + Agent Builder LLM (12 fév)
+- [x] Sprint 3 — Templates + Analytics (12-13 fév)
+- [x] Sprint 4 — Alertes + Rapports (13 fév)
+- [x] Sprint 5-6 — Notifications + Google Calendar (13 fév)
+- [x] Sprint 7 — Bugfix (16 bugs), Reports API, Cleanup, Merge (23-26 fév)
+- [ ] Sprint 8 — Tenant display_name, pagination, sécurité, CI/CD
+- [ ] Phase prod — Tests données réelles, déploiement production
+- [ ] Multi-tenant complet + facturation Stripe
+
+## 🔗 URLs
+
+| Environnement | URL |
+|---------------|-----|
+| Preprod | https://callrounded-preprod.apps.ilanewep.cloud |
 
 ## 👥 Équipe
 
-- **Ilane** — Développeur principal, Architecture
+- **Ilane** — Architecture, Direction technique
 - **Willyam BEGOT** — Business, Commercial
-- **Shiro 🦊** — IA Assistant, Frontend
+- **Shiro 🦊** — IA Assistant, Dev full-stack
 - **Kuro 🐺** — IA Assistant, Backend & Tests
 
 ## 📄 Licence
