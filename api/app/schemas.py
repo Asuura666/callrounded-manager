@@ -16,8 +16,13 @@ class UserResponse(BaseModel):
     role: str
     tenant_id: uuid.UUID
     tenant_name: str | None = None
+    tenant_display_name: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class TenantPatch(BaseModel):
+    display_name: str | None = None
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────

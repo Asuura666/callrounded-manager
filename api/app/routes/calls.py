@@ -136,12 +136,34 @@ async def list_calls_rich(
     current_user: CurrentUser,
     tenant_id: TenantId,
     accessible_agents: AccessibleAgentIds,
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(20, ge=1, le=100),
+    page: int = Query(1, ge=1),
+    call_status: str | None = Query(None, alias="status"),
+    from_date: str | None = Query(None),
+    to_date: str | None = Query(None),
 ):
-    """List calls with rich data formatted for frontend."""
-    raw = await cr.list_calls(limit=limit, page=1)
+    """List calls with rich data formatted for frontend (paginated)."""
+    # Fetch more than needed to handle filtering
+    fetch_limit = min(limit * 3, 500)
+    raw = await cr.list_calls(limit=fetch_limit, page=1)
     calls = raw.get("data", []) if isinstance(raw, dict) else raw
-    results = []
+    filtered = []
+
+    # Parse date filters
+    filter_from = None
+    filter_to = None
+    if from_date:
+        try:
+            filter_from = datetime.strptime(from_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    if to_date:
+        try:
+            filter_to = datetime.strptime(to_date, "%Y-%m-%d").replace(
+                hour=23, minute=59, second=59, tzinfo=timezone.utc
+            )
+        except ValueError:
+            pass
 
     for c in calls:
         agent_ext = c.get("agent_id")
@@ -150,7 +172,38 @@ async def list_calls_rich(
         if accessible_agents is not None and agent_str not in accessible_agents:
             continue
 
-        # Bug #2: dynamic agent name
+        c_status = c.get("status", "unknown")
+        if call_status and c_status != call_status:
+            continue
+
+        # Date filtering
+        if filter_from or filter_to:
+            start_str = c.get("start_time")
+            if start_str:
+                try:
+                    start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                    if start_dt.tzinfo is None:
+                        start_dt = start_dt.replace(tzinfo=timezone.utc)
+                    if filter_from and start_dt < filter_from:
+                        continue
+                    if filter_to and start_dt > filter_to:
+                        continue
+                except (ValueError, AttributeError):
+                    pass
+
+        filtered.append(c)
+
+    # Paginate
+    total_items = len(filtered)
+    total_pages = max(1, (total_items + limit - 1) // limit)
+    start_idx = (page - 1) * limit
+    end_idx = start_idx + limit
+    page_calls = filtered[start_idx:end_idx]
+
+    results = []
+    for c in page_calls:
+        agent_ext = c.get("agent_id")
+        agent_str = str(agent_ext) if agent_ext else None
         agent_name = await get_agent_name(agent_str)
 
         results.append({
@@ -173,7 +226,13 @@ async def list_calls_rich(
             "cost": c.get("cost") or 0,
         })
 
-    return {"calls": results}
+    return {
+        "calls": results,
+        "total_items": total_items,
+        "current_page": page,
+        "total_pages": total_pages,
+        "per_page": limit,
+    }
 
 
 @router.get("/{call_id}")

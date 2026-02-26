@@ -103,6 +103,10 @@ export function CallHistoryRich() {
   const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const perPage = 20;
   const [filters, setFilters] = useState<Filters>({
     search: "",
     status: "",
@@ -113,14 +117,21 @@ export function CallHistoryRich() {
   });
 
   useEffect(() => {
-    fetchCalls();
-  }, []);
+    fetchCalls(currentPage);
+  }, [currentPage]);
 
-  async function fetchCalls() {
+  async function fetchCalls(page = 1) {
     try {
       setLoading(true);
-      const data = await api.get<{ calls: CallRecord[] }>("/calls/rich");
+      const params = new URLSearchParams({ page: String(page), limit: String(perPage) });
+      if (filters.status) params.set("status", filters.status);
+      if (filters.dateFrom) params.set("from_date", filters.dateFrom);
+      if (filters.dateTo) params.set("to_date", filters.dateTo);
+      const data = await api.get<{ calls: CallRecord[]; total_items: number; total_pages: number; current_page: number }>(`/calls/rich?${params}`);
       setCalls(data.calls || []);
+      setTotalPages(data.total_pages || 1);
+      setTotalItems(data.total_items || 0);
+      setCurrentPage(data.current_page || page);
     } catch (error) {
       setCalls([]);
     } finally {
@@ -262,10 +273,17 @@ export function CallHistoryRich() {
                   <option value="negative">Négatif</option>
                 </select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
+                <Button
+                  variant="default"
+                  onClick={() => { setCurrentPage(1); fetchCalls(1); }}
+                  className="bg-gold hover:bg-gold/90 text-navy"
+                >
+                  Appliquer
+                </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => setFilters({ search: "", status: "", sentiment: "", dateFrom: "", dateTo: "", agent: "" })}
+                  onClick={() => { setFilters({ search: "", status: "", sentiment: "", dateFrom: "", dateTo: "", agent: "" }); setCurrentPage(1); setTimeout(() => fetchCalls(1), 0); }}
                   className="text-text-muted"
                 >
                   <X className="w-4 h-4 mr-1" />
@@ -395,6 +413,33 @@ export function CallHistoryRich() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4">
+          <p className="text-sm text-text-muted">
+            Page {currentPage} sur {totalPages} ({totalItems} appel{totalItems !== 1 ? "s" : ""})
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+            >
+              ← Précédent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+            >
+              Suivant →
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Transcript Dialog */}
       <Dialog open={transcriptOpen} onOpenChange={setTranscriptOpen}>

@@ -32,7 +32,8 @@ async def login(body: LoginRequest, response: Response, db: DBSession):
         email=user.email,
         role=user.role,
         tenant_id=user.tenant_id,
-        tenant_name=tenant.name if tenant else None,
+        tenant_name=tenant.display_name or tenant.name if tenant else None,
+        tenant_display_name=tenant.display_name if tenant else None,
     )
 
 
@@ -52,7 +53,8 @@ async def me(current_user: CurrentUser, db: DBSession):
         email=current_user.email,
         role=current_user.role,
         tenant_id=current_user.tenant_id,
-        tenant_name=tenant.name if tenant else None,
+        tenant_name=tenant.display_name or tenant.name if tenant else None,
+        tenant_display_name=tenant.display_name if tenant else None,
     )
 
 

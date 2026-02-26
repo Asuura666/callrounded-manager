@@ -13,7 +13,8 @@ from sqlalchemy.orm import selectinload
 
 from ..auth import hash_password
 from ..deps import AdminUser, DBSession, TenantId
-from ..models import Role, User, UserAgentAssignment, AgentCache
+from ..models import Role, Tenant, User, UserAgentAssignment, AgentCache
+from ..schemas import TenantPatch
 
 logger = logging.getLogger(__name__)
 
@@ -464,3 +465,44 @@ async def list_all_agents(
         }
         for a in agents
     ]
+
+
+# ── Tenant Settings ───────────────────────────────────────────────────
+
+@router.get("/tenant")
+async def get_tenant(db: DBSession, tenant_id: TenantId, admin: AdminUser):
+    """Get current tenant info."""
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant non trouvé")
+    return {
+        "id": str(tenant.id),
+        "name": tenant.name,
+        "display_name": tenant.display_name,
+        "plan": tenant.plan,
+        "created_at": tenant.created_at.isoformat(),
+    }
+
+
+@router.patch("/tenant")
+async def update_tenant(body: TenantPatch, db: DBSession, tenant_id: TenantId, admin: AdminUser):
+    """Update tenant settings (display_name)."""
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant non trouvé")
+
+    if body.display_name is not None:
+        tenant.display_name = body.display_name
+
+    await db.commit()
+    await db.refresh(tenant)
+
+    return {
+        "id": str(tenant.id),
+        "name": tenant.name,
+        "display_name": tenant.display_name,
+        "plan": tenant.plan,
+        "created_at": tenant.created_at.isoformat(),
+    }
