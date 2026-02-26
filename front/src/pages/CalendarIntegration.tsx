@@ -108,7 +108,6 @@ export function CalendarIntegration() {
       setEvents(eventsRes?.events || MOCK_EVENTS);
       setStats(statsRes || MOCK_STATS);
     } catch (error) {
-      console.log("[Calendar] Using mock data");
       setStatus(null);
       setEvents([]);
       setStats(null);

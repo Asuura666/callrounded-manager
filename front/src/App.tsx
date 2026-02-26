@@ -4,7 +4,6 @@ import { AppLayout } from "@/layouts/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { AgentsPage } from "@/pages/AgentsPage";
-import { CallsPage } from "@/pages/CallsPage";
 import { CallDetailPage } from "@/pages/CallDetailPage";
 import { CallHistoryRich } from "@/pages/CallHistoryRich";
 import { PhoneNumbersPage } from "@/pages/PhoneNumbersPage";

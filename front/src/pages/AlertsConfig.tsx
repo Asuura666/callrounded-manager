@@ -128,7 +128,6 @@ export function AlertsConfig() {
       const data = await api.get<{ rules: AlertRule[] }>("/alerts/rules");
       setRules(data.rules || []);
     } catch (error) {
-      console.log("[Alerts] Using mock data");
       setRules([]);
     } finally {
       setLoading(false);

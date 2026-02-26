@@ -67,7 +67,6 @@ Dites-moi quel type d'agent vous souhaitez créer ! Par exemple :
     setInput("");
     setLoading(true);
 
-    console.log("[AgentBuilder] Sending message:", userMessage.content);
 
     try {
       const response = await api.post<{
@@ -81,7 +80,6 @@ Dites-moi quel type d'agent vous souhaitez créer ! Par exemple :
         })),
       });
 
-      console.log("[AgentBuilder] Response:", response);
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
@@ -99,7 +97,6 @@ Dites-moi quel type d'agent vous souhaitez créer ! Par exemple :
 
       // If agent was created successfully, show success state
       if (response.action?.type === "create_agent" && response.action.status === "success") {
-        console.log("[AgentBuilder] Agent created successfully:", response.action.data);
       }
     } catch (error) {
       console.error("[AgentBuilder] Error:", error);

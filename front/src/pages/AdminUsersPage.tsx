@@ -61,7 +61,6 @@ export function AdminUsersPage() {
 
   async function handleCreateUser() {
     try {
-      console.log("[AdminUsersPage] Creating user:", newUser.email);
       await api.post("/admin/users", newUser);
       setCreateDialogOpen(false);
       setNewUser({ email: "", password: "", role: "USER" });
@@ -74,7 +73,6 @@ export function AdminUsersPage() {
   async function handleDeleteUser(userId: string) {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) return;
     try {
-      console.log("[AdminUsersPage] Deleting user:", userId);
       await api.delete(`/admin/users/${userId}`);
       fetchUsers();
     } catch (error) {
@@ -85,7 +83,6 @@ export function AdminUsersPage() {
   async function handleToggleRole(user: User) {
     const newRole = user.role === "ADMIN" ? "USER" : "ADMIN";
     try {
-      console.log("[AdminUsersPage] Changing role for", user.email, "to", newRole);
       await api.patch(`/admin/users/${user.id}`, { role: newRole });
       fetchUsers();
     } catch (error) {
@@ -102,7 +99,6 @@ export function AdminUsersPage() {
   async function handleAssignAgents() {
     if (!selectedUser) return;
     try {
-      console.log("[AdminUsersPage] Assigning agents to", selectedUser.email, ":", selectedAgents);
       await api.post(`/admin/users/${selectedUser.id}/agents`, { agent_ids: selectedAgents });
       setAssignDialogOpen(false);
       setSelectedUser(null);

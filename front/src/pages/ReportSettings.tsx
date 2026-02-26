@@ -74,7 +74,6 @@ export function ReportSettings() {
       const data = await api.get<ReportConfig>("/reports/weekly/config");
       setConfig(data);
     } catch (error) {
-      console.log("[ReportSettings] Using default config");
     } finally {
       setLoading(false);
     }

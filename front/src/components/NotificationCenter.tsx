@@ -35,7 +35,6 @@ export function NotificationCenter() {
   useEffect(() => {
     const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws/notifications`;
     
-    console.log("[NotificationCenter] Connecting to WebSocket:", wsUrl);
     
     // For now, simulate with mock data since WS might not be ready
     const mockNotifications: Notification[] = [
@@ -72,13 +71,11 @@ export function NotificationCenter() {
       const socket = new WebSocket(wsUrl);
       
       socket.onopen = () => {
-        console.log("[NotificationCenter] WebSocket connected");
       };
       
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("[NotificationCenter] Received:", data);
           
           const notification: Notification = {
             id: crypto.randomUUID(),
@@ -102,11 +99,9 @@ export function NotificationCenter() {
       };
       
       socket.onerror = (error) => {
-        console.log("[NotificationCenter] WebSocket error (using mock data)");
       };
       
       socket.onclose = () => {
-        console.log("[NotificationCenter] WebSocket closed");
       };
       
       setWs(socket);
@@ -115,7 +110,6 @@ export function NotificationCenter() {
         socket.close();
       };
     } catch (error) {
-      console.log("[NotificationCenter] WebSocket not available, using mock data");
     }
   }, [soundEnabled]);
 
