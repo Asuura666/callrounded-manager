@@ -169,3 +169,51 @@ async def create_agent(payload: dict[str, Any]) -> dict[str, Any] | None:
     except Exception as exc:
         logger.error("CallRounded create_agent failed: %s", exc)
         return None
+
+
+# ── Phone Numbers ─────────────────────────────────────────────────────
+
+async def list_phone_numbers() -> list[dict[str, Any]]:
+    """List all phone numbers."""
+    try:
+        async with _client() as client:
+            resp = await client.get("/phone-numbers")
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("data", [])
+    except Exception as exc:
+        logger.warning("CallRounded list_phone_numbers failed: %s", exc)
+        return []
+
+
+async def set_phone_redirect(phone_id: str, redirect: bool, redirect_number: str | None = None) -> dict[str, Any] | None:
+    """Enable/disable call redirect on a phone number.
+    Uses PUT with full payload and is_redirect_enabled field (matches CallRounded dashboard behavior)."""
+    try:
+        # First GET the current phone number config
+        async with _client() as client:
+            get_resp = await client.get(f"/phone-numbers/{phone_id}")
+            get_resp.raise_for_status()
+            current = get_resp.json().get("data", {})
+        
+        # Build full PUT payload matching CallRounded dashboard format
+        payload = {
+            "name": current.get("name", ""),
+            "number": current.get("number", ""),
+            "inbound_agent_id": current.get("inbound_agent_id"),
+            "inbound_flow_id": current.get("inbound_flow_id"),
+            "is_redirect_enabled": redirect,
+            "redirect_phone_number": redirect_number or current.get("redirect_phone_number"),
+            "media_encryption": "disable",
+            "transport": "auto",
+        }
+        logger.info("set_phone_redirect PUT payload: is_redirect_enabled=%s for phone %s", redirect, phone_id)
+        
+        async with _client() as client:
+            resp = await client.put(f"/phone-numbers/{phone_id}", json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("data", data)
+    except Exception as exc:
+        logger.warning("CallRounded set_phone_redirect(%s, %s) failed: %s", phone_id, redirect, exc)
+        return None

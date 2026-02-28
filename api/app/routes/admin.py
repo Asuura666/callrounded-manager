@@ -514,8 +514,9 @@ async def toggle_agent(
     current_user: AdminUser,
     tenant_id: TenantId,
 ):
-    """Toggle agent enabled/disabled for tenant. Admin only."""
+    """Toggle agent enabled/disabled status for tenant. Admin only."""
     from ..models import Tenant
+    
     result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
     if not tenant:
@@ -529,7 +530,6 @@ async def toggle_agent(
         "agent_enabled": tenant.agent_enabled,
         "message": "Réceptionniste activé" if tenant.agent_enabled else "Réceptionniste désactivé"
     }
-
 
 @router.get("/agent/status")
 async def get_agent_status(

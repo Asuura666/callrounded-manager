@@ -148,10 +148,16 @@ export function AgentsPage() {
               </div>
 
               {!agentEnabled && (
-                <div className="px-6 py-3 bg-red-50 border-b border-red-100">
+                <div className="px-6 py-3 bg-red-50 border-b border-red-100 space-y-1">
                   <p className="text-sm text-red-600 flex items-center gap-2">
                     <XCircle className="w-4 h-4 shrink-0" />
-                    Le réceptionniste est actuellement désactivé. Les appels ne seront pas pris en charge.
+                    Le réceptionniste est marqué comme désactivé.
+                  </p>
+                  <p className="text-xs text-red-500 pl-6">
+                    Pour couper réellement les appels, activez la redirection sur{" "}
+                    <a href="https://app.callrounded.com/phones" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-red-700">
+                      app.callrounded.com
+                    </a>
                   </p>
                 </div>
               )}
