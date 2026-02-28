@@ -12,7 +12,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 
 from ..auth import hash_password
-from ..deps import AdminUser, DBSession, TenantId
+from ..deps import AdminUser, CurrentUser, DBSession, TenantId
 from ..models import Role, Tenant, User, UserAgentAssignment, AgentCache
 from ..schemas import TenantPatch
 
@@ -506,3 +506,42 @@ async def update_tenant(body: TenantPatch, db: DBSession, tenant_id: TenantId, a
         "plan": tenant.plan,
         "created_at": tenant.created_at.isoformat(),
     }
+
+
+@router.patch("/agent/toggle")
+async def toggle_agent(
+    db: DBSession,
+    current_user: AdminUser,
+    tenant_id: TenantId,
+):
+    """Toggle agent enabled/disabled for tenant. Admin only."""
+    from ..models import Tenant
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant non trouvé")
+    
+    tenant.agent_enabled = not tenant.agent_enabled
+    await db.commit()
+    await db.refresh(tenant)
+    
+    return {
+        "agent_enabled": tenant.agent_enabled,
+        "message": "Réceptionniste activé" if tenant.agent_enabled else "Réceptionniste désactivé"
+    }
+
+
+@router.get("/agent/status")
+async def get_agent_status(
+    db: DBSession,
+    current_user: CurrentUser,
+    tenant_id: TenantId,
+):
+    """Get agent enabled/disabled status for tenant."""
+    from ..models import Tenant
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant non trouvé")
+    
+    return {"agent_enabled": tenant.agent_enabled}

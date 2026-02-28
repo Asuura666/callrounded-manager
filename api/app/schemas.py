@@ -17,6 +17,7 @@ class UserResponse(BaseModel):
     tenant_id: uuid.UUID
     tenant_name: str | None = None
     tenant_display_name: str | None = None
+    agent_enabled: bool = True
 
     model_config = {"from_attributes": True}
 

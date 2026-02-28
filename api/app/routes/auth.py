@@ -34,6 +34,7 @@ async def login(body: LoginRequest, response: Response, db: DBSession):
         tenant_id=user.tenant_id,
         tenant_name=tenant.display_name or tenant.name if tenant else None,
         tenant_display_name=tenant.display_name if tenant else None,
+        agent_enabled=tenant.agent_enabled if tenant else True,
     )
 
 
@@ -55,6 +56,7 @@ async def me(current_user: CurrentUser, db: DBSession):
         tenant_id=current_user.tenant_id,
         tenant_name=tenant.display_name or tenant.name if tenant else None,
         tenant_display_name=tenant.display_name if tenant else None,
+        agent_enabled=tenant.agent_enabled if tenant else True,
     )
 
 
