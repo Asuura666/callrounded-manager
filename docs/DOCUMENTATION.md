@@ -461,6 +461,7 @@ docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 | **5** — Notifications & Calendar | 13 fév | Centre de notifications, Google Calendar OAuth |
 | **6** — Calendar UI | 13 fév | Interface calendrier complète, CalendarWidget |
 | **7** — Bugfix & Cleanup | 23-26 fév | 7 bugs corrigés, Reports API, nettoyage console.log/dead code/mocks, merge → main |
+| **8** — Stabilisation | 26-28 fév | Sécurité JWT, tenant display_name, pagination, rate limiting (slowapi), UX cleanup (Coming Soon, filtres), doc rewrite |
 
 ### Hotfixes
 
@@ -468,6 +469,8 @@ docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 |------|-----|
 | 16 fév | Ghost user argon2id → supprimé, confirmé bcrypt only |
 | 19 fév | Clé API, AGENT_ID, `/calls/rich`, fix RBAC `is_admin()`, fix routes admin frontend |
+| 26 fév | JWT_SECRET régénéré (48 bytes crypto), 5 headers sécurité nginx, FRONTEND_URL corrigé |
+| 28 fév | Agent name résolu via API (plus d ID technique), filtre sentiment supprimé, rate limiting 120/min |
 
 ---
 
@@ -491,6 +494,12 @@ docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 | Mock fallbacks Calendar | Fausses données si API fail | Fallback vers états vides | 26 fév |
 | Mock fallbacks Alerts | `MOCK_RULES` inutilisé | Supprimé la constante | 26 fév |
 | CallsPage.tsx dead code | Importé mais jamais routé | Supprimé fichier + import | 26 fév |
+| Analytics agent ID technique | `agent_name` affichait `a77a1d9c...` | Résolution nom via `cr_service.get_agent()` | 28 fév |
+| Analytics filtre week/month bloqué | Boutons absents en état vide | Ajouté sélecteur période dans EmptyState | 28 fév |
+| Mon réceptionniste infos techniques | `base_prompt` et bouton Settings visibles | Masqué section instructions + bouton | 28 fév |
+| Transcription messages système | Messages KB/system affichés au client | Filtrage roles system/tool/function + préfixes KB | 28 fév |
+| Historique filtre sentiment inutile | Aucun appel n a de sentiment | Supprimé filtre sentiment + colonne CSV | 28 fév |
+| Liens API externes visibles | Liens `app.callrounded.com` côté client | Supprimé liens externes PhoneNumbers + KB | 28 fév |
 
 ---
 
@@ -510,19 +519,26 @@ docker compose -f docker-compose.preprod.yml exec api-preprod python -m app.seed
 
 ### Sécurité
 - JWT secret en `.env` (pas de vault)
-- Pas de rate limiting API
+- ✅ Rate limiting API : slowapi 120 req/min (ajouté Sprint 8)
 - CORS restreint au `FRONTEND_URL`
 
 ---
 
 ## 13. Prochaines étapes
 
-### Court terme (Sprint 8)
-1. **Tenant `display_name`** — champ configurable pour le nom du salon
-2. **Pagination `/calls/rich`** — backend page param + frontend prev/next
-3. **Vérification sécurité preprod** — JWT_SECRET, API keys
-4. **Pipeline CI/CD** — GitHub Actions pour déploiement auto
-5. **Permissions API CallRounded** — phone-numbers et knowledge-bases
+### Court terme (Sprint 8) — ✅ Terminé
+1. ✅ **Tenant `display_name`** — champ configurable pour le nom du salon
+2. ✅ **Pagination `/calls/rich`** — backend page/limit + frontend prev/next
+3. ✅ **Sécurité preprod** — JWT_SECRET 48 bytes, 5 headers nginx, rate limiting slowapi
+4. ✅ **Pipeline CI/CD** — GitHub Actions pour déploiement auto
+5. ⏳ **Permissions API CallRounded** — phone-numbers et knowledge-bases (attente support)
+6. ✅ **UX cleanup** — Coming Soon (alertes/rapports), filtres sentiment supprimés, agent name résolu
+7. ✅ **Documentation** — DOCUMENTATION.md mise à jour Sprint 8
+
+### Court terme (Sprint 2)
+1. **Bouton désactivation agent** (demande William)
+2. **Google Calendar OAuth** en preprod avec vrais credentials
+3. **CI/CD pipeline dans repo CallRounded**
 
 ### Moyen terme
 6. **Google Calendar OAuth** en preprod avec vrais credentials

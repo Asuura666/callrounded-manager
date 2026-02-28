@@ -32,17 +32,34 @@ async def get_agent_name(agent_id: str | None) -> str:
 
 
 def transform_transcript(raw_transcript):
-    """Transform CallRounded transcript to frontend format."""
+    """Transform CallRounded transcript to frontend format.
+    Filters out system messages and knowledge base content."""
     if not raw_transcript:
         return []
+    # Roles/patterns to exclude (system, KB injection, task switches)
+    EXCLUDED_ROLES = {"system", "tool", "function"}
+    KB_PREFIXES = (
+        "[Knowledge Base", "[KB]", "[Context]", "[System]",
+        "Base de connaissances", "knowledge_base",
+    )
     result = []
     for i, entry in enumerate(raw_transcript):
         role = entry.get("role", "agent")
+        content = entry.get("content", "") or ""
+        # Skip system/tool roles
+        if role.lower() in EXCLUDED_ROLES:
+            continue
+        # Skip KB-injected content
+        if any(content.strip().startswith(prefix) for prefix in KB_PREFIXES):
+            continue
+        # Skip empty messages
+        if not content.strip():
+            continue
         speaker = "agent" if role == "agent" else "caller"
         result.append({
             "speaker": speaker,
-            "text": entry.get("content", ""),
-            "timestamp": i * 5,  # Approximate timestamp
+            "text": content,
+            "timestamp": i * 5,
         })
     return result
 

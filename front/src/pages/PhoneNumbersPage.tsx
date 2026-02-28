@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, ExternalLink, Shield, Activity } from "lucide-react";
+import { Phone, Shield, Activity } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,11 +56,7 @@ export function PhoneNumbersPage() {
               <Phone className="w-8 h-8 text-navy/40" />
             </div>
             <p className="text-text-muted">Aucun numéro détecté dans l'historique des appels.</p>
-            <a href="https://app.callrounded.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-4 text-sm text-gold hover:text-gold-dark">
-              <ExternalLink className="w-4 h-4" />
-              Gérer sur CallRounded
-            </a>
+
           </CardContent>
         </Card>
       ) : (
@@ -98,16 +94,7 @@ export function PhoneNumbersPage() {
             </Card>
           ))}
           
-          <div className="text-center pt-4">
-            <p className="text-sm text-text-muted mb-3">
-              Numéros extraits de l'historique des appels. Pour la gestion avancée :
-            </p>
-            <a href="https://app.callrounded.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg btn-gold">
-              <ExternalLink className="w-4 h-4" />
-              Ouvrir CallRounded
-            </a>
-          </div>
+
         </div>
       )}
     </div>

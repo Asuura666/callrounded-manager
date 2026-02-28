@@ -177,6 +177,11 @@ export function CallDetailPage() {
           {transcript.length > 0 ? (
             <div className="space-y-3">
               {transcript.map((entry, idx) => {
+                // Filter out system/KB messages
+                if (["system", "tool", "function"].includes(entry.role.toLowerCase())) return null;
+                if (entry.content?.startsWith("[Knowledge Base") || entry.content?.startsWith("[KB]") || entry.content?.startsWith("[System]")) return null;
+                if (!entry.content?.trim()) return null;
+
                 if (entry.role === "task_switch") {
                   return (
                     <div key={idx} className="text-center">

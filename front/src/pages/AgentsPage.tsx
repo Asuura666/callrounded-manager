@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Headset, Globe, Mic, MessageSquare, Settings, CheckCircle2 } from "lucide-react";
+import { Headset, Globe, Mic, MessageSquare, CheckCircle2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
@@ -94,11 +94,7 @@ export function AgentsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="hidden sm:block">
-                    <button className="p-2 rounded-lg text-text-muted hover:text-navy hover:bg-navy/5 transition-colors">
-                      <Settings className="w-5 h-5" />
-                    </button>
-                  </div>
+
                 </div>
               </div>
 
@@ -118,17 +114,7 @@ export function AgentsPage() {
                 </div>
               </div>
 
-              {agent.base_prompt && (
-                <div className="p-6 bg-[#FAFBFC]">
-                  <h4 className="text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    Instructions (résumé)
-                  </h4>
-                  <p className="text-sm text-text-primary leading-relaxed">
-                    {agent.base_prompt.length > 250 ? agent.base_prompt.substring(0, 250) + "..." : agent.base_prompt}
-                  </p>
-                </div>
-              )}
+
             </div>
           ))}
         </div>

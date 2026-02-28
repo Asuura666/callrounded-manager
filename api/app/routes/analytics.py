@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from ..deps import AccessibleAgentIds, CurrentUser, DBSession, TenantId
+from ..services import callrounded as cr_service
 from ..models import WeeklyReport
 from ..services import callrounded as cr
 
@@ -244,10 +245,23 @@ async def get_analytics_overview(
         if c.get("duration_seconds"):
             agent_map[agent_id]["durations"].append(c["duration_seconds"])
     
+    # Resolve agent names from API
+    agent_names = {}
+    for aid in agent_map.keys():
+        if aid != "unknown":
+            try:
+                agent_data = await cr_service.get_agent(aid)
+                if agent_data:
+                    agent_names[aid] = agent_data.get("name", f"Agent {aid[:8]}...")
+                else:
+                    agent_names[aid] = f"Agent {aid[:8]}..."
+            except Exception:
+                agent_names[aid] = f"Agent {aid[:8]}..."
+
     agent_performance = [
         AgentPerformance(
             agent_id=agent_id,
-            agent_name=f"Agent {agent_id[:8]}..." if agent_id != "unknown" else "Inconnu",
+            agent_name=agent_names.get(agent_id, "Inconnu") if agent_id != "unknown" else "Inconnu",
             total_calls=data["total"],
             completed_calls=data["completed"],
             completion_rate=round(data["completed"] / data["total"] * 100, 1) if data["total"] > 0 else 0,

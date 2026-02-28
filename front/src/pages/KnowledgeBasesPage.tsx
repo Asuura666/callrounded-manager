@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BookOpen, ExternalLink, Brain, Clock, Scissors, MapPin, Phone, Users, FileText, Shield, Sparkles } from "lucide-react";
+import { BookOpen, Brain, Clock, Scissors, MapPin, Phone, Users, FileText, Shield, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -196,17 +196,7 @@ export function KnowledgeBasesPage() {
             )}
           </div>
 
-          {/* Link to CallRounded */}
-          <div className="text-center pt-2">
-            <p className="text-sm text-text-muted mb-3">
-              Pour modifier les informations du salon ou ajouter des documents :
-            </p>
-            <a href="https://app.callrounded.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg btn-gold">
-              <ExternalLink className="w-4 h-4" />
-              Gérer sur CallRounded
-            </a>
-          </div>
+
         </div>
       )}
     </div>

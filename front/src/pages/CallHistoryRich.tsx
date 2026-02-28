@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   Phone, Clock, Calendar, User, MessageSquare, Download, Filter,
   ChevronDown, ChevronUp, Play, Pause, Search, X, TrendingUp,
-  ThumbsUp, ThumbsDown, Minus, FileText, ExternalLink
+  FileText, ExternalLink
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +39,6 @@ interface TranscriptEntry {
 interface Filters {
   search: string;
   status: string;
-  sentiment: string;
   dateFrom: string;
   dateTo: string;
   agent: string;
@@ -58,25 +57,6 @@ function formatDate(dateStr: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function SentimentBadge({ sentiment }: { sentiment?: string }) {
-  if (!sentiment) return null;
-  
-  const config = {
-    positive: { icon: ThumbsUp, color: "bg-green-100 text-green-700", label: "Positif" },
-    neutral: { icon: Minus, color: "bg-gray-100 text-gray-600", label: "Neutre" },
-    negative: { icon: ThumbsDown, color: "bg-red-100 text-red-700", label: "Négatif" },
-  }[sentiment] || { icon: Minus, color: "bg-gray-100", label: sentiment };
-
-  const Icon = config.icon;
-  
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
-      <Icon className="w-3 h-3" />
-      {config.label}
-    </span>
-  );
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -110,7 +90,6 @@ export function CallHistoryRich() {
   const [filters, setFilters] = useState<Filters>({
     search: "",
     status: "",
-    sentiment: "",
     dateFrom: "",
     dateTo: "",
     agent: "",
@@ -155,7 +134,7 @@ export function CallHistoryRich() {
 
   function exportCalls() {
     const csv = [
-      ["Date", "Numéro", "Nom", "Durée", "Statut", "Résultat", "Sentiment", "Résumé"].join(","),
+      ["Date", "Numéro", "Nom", "Durée", "Statut", "Résultat", "Résumé"].join(","),
       ...calls.map(c => [
         formatDate(c.started_at),
         c.caller_number,
@@ -186,7 +165,6 @@ export function CallHistoryRich() {
       }
     }
     if (filters.status && call.status !== filters.status) return false;
-    if (filters.sentiment && call.sentiment !== filters.sentiment) return false;
     return true;
   });
 
@@ -261,17 +239,6 @@ export function CallHistoryRich() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-navy mb-1 block">Sentiment</label>
-                <select
-                  value={filters.sentiment}
-                  onChange={e => setFilters(f => ({ ...f, sentiment: e.target.value }))}
-                  className="w-full h-10 px-3 rounded-md border border-border bg-white text-sm"
-                >
-                  <option value="">Tous</option>
-                  <option value="positive">Positif</option>
-                  <option value="neutral">Neutre</option>
-                  <option value="negative">Négatif</option>
-                </select>
               </div>
               <div className="flex items-end gap-2">
                 <Button
@@ -283,7 +250,7 @@ export function CallHistoryRich() {
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => { setFilters({ search: "", status: "", sentiment: "", dateFrom: "", dateTo: "", agent: "" }); setCurrentPage(1); setTimeout(() => fetchCalls(1), 0); }}
+                  onClick={() => { setFilters({ search: "", status: "", dateFrom: "", dateTo: "", agent: "" }); setCurrentPage(1); setTimeout(() => fetchCalls(1), 0); }}
                   className="text-text-muted"
                 >
                   <X className="w-4 h-4 mr-1" />
@@ -323,7 +290,6 @@ export function CallHistoryRich() {
                       {call.caller_name || call.caller_number}
                     </span>
                     <StatusBadge status={call.status} />
-                    <SentimentBadge sentiment={call.sentiment} />
                   </div>
                   <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                     <span className="flex items-center gap-1">

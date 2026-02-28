@@ -215,12 +215,36 @@ export function AnalyticsDashboard() {
   if (!stats || stats.total_calls === 0) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-navy font-heading flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-gold" />
-            Analytics
-          </h1>
-          <p className="text-text-muted mt-1">Performance de votre réceptionniste IA</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-navy font-heading flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 text-gold" />
+              Analytics
+            </h1>
+            <p className="text-text-muted mt-1">Performance de votre réceptionniste IA</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPeriod("week")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                period === "week" 
+                  ? "bg-gold text-navy" 
+                  : "bg-gray-100 text-text-muted hover:bg-gray-200"
+              }`}
+            >
+              Cette semaine
+            </button>
+            <button
+              onClick={() => setPeriod("month")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                period === "month" 
+                  ? "bg-gold text-navy" 
+                  : "bg-gray-100 text-text-muted hover:bg-gray-200"
+              }`}
+            >
+              Ce mois
+            </button>
+          </div>
         </div>
         <Card className="border-gold/20">
           <CardContent>
